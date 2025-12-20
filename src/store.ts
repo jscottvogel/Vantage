@@ -20,12 +20,14 @@ interface AppState {
         ownerId: string,
         strategicValue: 'High' | 'Medium' | 'Low',
         targetDate: string,
-        goal: string,
-        benefit: string,
-        keyResults: {
-            description: string;
-            ownerId: string;
-            initiatives: { name: string; ownerId: string; link?: string }[];
+        outcomes: {
+            goal: string;
+            benefit: string;
+            keyResults: {
+                description: string;
+                ownerId: string;
+                initiatives: { name: string; ownerId: string; link?: string }[];
+            }[];
         }[]
     ) => void;
     updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
@@ -80,7 +82,7 @@ export const useStore = create<AppState>((set, get) => ({
         }]
     })),
 
-    createObjective: (name, ownerId, strategicValue, targetDate, goal, benefit, keyResults) => set(state => {
+    createObjective: (name, ownerId, strategicValue, targetDate, outcomes) => set(state => {
 
         // Objective Owner Display Logic
         const objectiveOwnerName = state.users.find(u => u.id === ownerId)?.name || ownerId;
@@ -92,16 +94,19 @@ export const useStore = create<AppState>((set, get) => ({
             status: 'Active',
             strategicValue,
             targetDate,
-            goal,
-            benefit,
 
-            // Map Recursive Structure
-            keyResults: keyResults.map(kr => ({
-                ...kr,
+            // Map Outcome Layer
+            outcomes: outcomes.map(out => ({
                 id: crypto.randomUUID(),
-                initiatives: kr.initiatives.map(init => ({
-                    ...init,
-                    id: crypto.randomUUID()
+                goal: out.goal,
+                benefit: out.benefit,
+                keyResults: out.keyResults.map(kr => ({
+                    ...kr,
+                    id: crypto.randomUUID(),
+                    initiatives: kr.initiatives.map(init => ({
+                        ...init,
+                        id: crypto.randomUUID()
+                    }))
                 }))
             })),
 

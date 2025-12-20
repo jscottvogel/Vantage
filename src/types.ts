@@ -27,6 +27,13 @@ export interface KeyResult {
     initiatives: Initiative[];
 }
 
+export interface Outcome {
+    id: string;
+    goal: string;
+    benefit: string;
+    keyResults: KeyResult[];
+}
+
 export interface StrategicObjective {
     id: string;
     name: string;
@@ -36,10 +43,8 @@ export interface StrategicObjective {
     strategicValue: StrategicValue;
     targetDate: string; // ISO Date
 
-    // New Fields
-    goal: string;
-    benefit: string;
-    keyResults: KeyResult[];
+    // New Layer
+    outcomes: Outcome[];
 
     // Computed/Derived
     currentHealth: UpdateHealth;

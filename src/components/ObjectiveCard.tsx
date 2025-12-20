@@ -1,8 +1,7 @@
 import type { StrategicObjective, StatusUpdate } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { AlertTriangle, Clock, TrendingUp, HelpCircle, Target, Briefcase } from 'lucide-react';
+import { Clock, Target, Briefcase, Layers } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
@@ -22,8 +21,9 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
         'Green': 'bg-green-100 text-green-800 border-green-200',
     }[objective.currentHealth];
 
-    // Helper to safely get first KR info
-    const firstKR = objective.keyResults.length > 0 ? objective.keyResults[0] : null;
+    // Helper to safely get first Outcome & KR
+    const firstOutcome = objective.outcomes.length > 0 ? objective.outcomes[0] : null;
+    const firstKR = firstOutcome && firstOutcome.keyResults.length > 0 ? firstOutcome.keyResults[0] : null;
 
     // Resolve Owner Name
     const getOwnerName = (id: string) => {
@@ -31,8 +31,11 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
         return user ? user.name : id;
     };
 
-    // Calculate total initiatives
-    const totalInitiatives = objective.keyResults.reduce((acc, kr) => acc + kr.initiatives.length, 0);
+    // Calculate stats
+    const totalOutcomes = objective.outcomes.length;
+    const totalInitiatives = objective.outcomes.reduce((chk, out) =>
+        chk + out.keyResults.reduce((acc, kr) => acc + kr.initiatives.length, 0), 0
+    );
 
     return (
         <Card className="hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full" onClick={() => onDrillDown(objective.id)}>
@@ -52,12 +55,17 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
 
-                {/* Goal & Benefit Preview */}
+                {/* Goal Preview (from First Outcome) */}
                 <div className="text-sm space-y-2">
-                    <div>
-                        <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Goal</span>
-                        <p className="text-foreground/90 line-clamp-1">{objective.goal}</p>
-                    </div>
+                    {firstOutcome && (
+                        <div>
+                            <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider flex items-center gap-1">
+                                <Layers className="w-3 h-3" /> Outcome Goal
+                            </span>
+                            <p className="text-foreground/90 line-clamp-1">{firstOutcome.goal}</p>
+                        </div>
+                    )}
+
                     {firstKR && (
                         <div>
                             <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Key Result</span>
@@ -65,24 +73,30 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                                 <p className="text-foreground/90 line-clamp-1 flex items-center">
                                     <Target className="w-3 h-3 mr-1 text-primary" />
                                     {firstKR.description}
-                                    {objective.keyResults.length > 1 && <span className="text-muted-foreground ml-1 text-xs">+{objective.keyResults.length - 1} more</span>}
                                 </p>
                                 {firstKR.ownerId && (
                                     <p className="text-xs text-muted-foreground ml-4">
-                                        KR Owner: {getOwnerName(firstKR.ownerId)}
+                                        Owner: {getOwnerName(firstKR.ownerId)}
                                     </p>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    {/* Initiative Count Badge */}
-                    {totalInitiatives > 0 && (
-                        <div className="mt-2 text-xs text-muted-foreground flex items-center">
-                            <Briefcase className="w-3 h-3 mr-1" />
-                            {totalInitiatives} Included Initiative{totalInitiatives !== 1 ? 's' : ''}
-                        </div>
-                    )}
+                    {/* Counts Badge */}
+                    <div className="flex gap-2 mt-2">
+                        {totalOutcomes > 1 && (
+                            <Badge variant="secondary" className="text-[10px] font-normal">
+                                +{totalOutcomes - 1} More Outcomes
+                            </Badge>
+                        )}
+                        {totalInitiatives > 0 && (
+                            <div className="text-xs text-muted-foreground flex items-center">
+                                <Briefcase className="w-3 h-3 mr-1" />
+                                {totalInitiatives} Initiative{totalInitiatives !== 1 ? 's' : ''}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex-1" />
@@ -95,27 +109,10 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                                 <Clock className="w-3 h-3 mr-1" />
                                 {lastUpdate ? new Date(lastUpdate.timestamp).toLocaleDateString() : 'No updates'}
                             </span>
-                            {lastUpdate?.aiCredibilityScore && lastUpdate.aiCredibilityScore < 70 && (
-                                <span className="text-xs text-amber-600 flex items-center" title="Low credibility detected by AI">
-                                    <AlertTriangle className="w-3 h-3 mr-1" />
-                                    Low Signal
-                                </span>
-                            )}
                         </div>
                         <p className="line-clamp-2 text-foreground/90">
                             {lastUpdate?.narrative || "No update provided yet."}
                         </p>
-                        {lastUpdate?.aiRiskFlags && lastUpdate.aiRiskFlags.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                                <div className="flex items-center gap-1 text-xs text-orange-600">
-                                    <TrendingUp className="w-3 h-3" />
-                                    <span>{lastUpdate.aiRiskFlags.length} Risk Signals Detected</span>
-                                    <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto" title="View Evidence">
-                                        <HelpCircle className="w-3 h-3" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
