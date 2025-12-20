@@ -13,6 +13,20 @@ export interface User {
     tenantId: string;
 }
 
+export interface Initiative {
+    id: string;
+    name: string;
+    ownerId: string;
+    link?: string;
+}
+
+export interface KeyResult {
+    id: string;
+    description: string;
+    ownerId: string; // References User.id
+    initiatives: Initiative[];
+}
+
 export interface StrategicObjective {
     id: string;
     name: string;
@@ -25,7 +39,7 @@ export interface StrategicObjective {
     // New Fields
     goal: string;
     benefit: string;
-    keyResults: string[]; // Simple list of strings for MVP
+    keyResults: KeyResult[];
 
     // Computed/Derived
     currentHealth: UpdateHealth;
@@ -39,7 +53,7 @@ export interface StrategicObjective {
 
 export interface StatusUpdate {
     id: string;
-    objectiveId: string; // Renamed from outcomeId
+    objectiveId: string;
     authorId: string;
     timestamp: string;
 

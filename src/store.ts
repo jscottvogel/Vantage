@@ -22,7 +22,11 @@ interface AppState {
         targetDate: string,
         goal: string,
         benefit: string,
-        keyResults: string[]
+        keyResults: {
+            description: string;
+            ownerId: string;
+            initiatives: { name: string; ownerId: string; link?: string }[];
+        }[]
     ) => void;
     updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
     addUpdate: (update: StatusUpdate) => void;
@@ -32,6 +36,7 @@ interface AppState {
 const INITIAL_USERS: User[] = [
     { id: '1', name: 'Admin User', email: 'admin@vantage.inc', role: 'Admin', tenantId: 't1' },
     { id: '2', name: 'Sarah J.', email: 'sarah@vantage.inc', role: 'Member', tenantId: 't1' },
+    { id: '3', name: 'Mike T.', email: 'mike@vantage.inc', role: 'Member', tenantId: 't1' },
 ];
 
 export const useStore = create<AppState>((set, get) => ({
@@ -77,16 +82,29 @@ export const useStore = create<AppState>((set, get) => ({
 
     createObjective: (name, ownerId, strategicValue, targetDate, goal, benefit, keyResults) => set(state => {
 
+        // Objective Owner Display Logic
+        const objectiveOwnerName = state.users.find(u => u.id === ownerId)?.name || ownerId;
+
         const newObjective: StrategicObjective = {
             id: crypto.randomUUID(),
             name,
-            ownerId: state.users.find(u => u.id === ownerId)?.name || ownerId, // Store name for simple display in mock
+            ownerId: objectiveOwnerName,
             status: 'Active',
             strategicValue,
             targetDate,
             goal,
             benefit,
-            keyResults,
+
+            // Map Recursive Structure
+            keyResults: keyResults.map(kr => ({
+                ...kr,
+                id: crypto.randomUUID(),
+                initiatives: kr.initiatives.map(init => ({
+                    ...init,
+                    id: crypto.randomUUID()
+                }))
+            })),
+
             currentHealth: 'Green', // Default
             riskScore: 0,
             tenantId: state.currentUser?.tenantId || 't1',

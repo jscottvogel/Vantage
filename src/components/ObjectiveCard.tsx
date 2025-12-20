@@ -2,8 +2,9 @@ import type { StrategicObjective, StatusUpdate } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { AlertTriangle, Clock, TrendingUp, HelpCircle, Target } from 'lucide-react';
+import { AlertTriangle, Clock, TrendingUp, HelpCircle, Target, Briefcase } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useStore } from '../store';
 
 interface ObjectiveCardProps {
     objective: StrategicObjective;
@@ -12,11 +13,26 @@ interface ObjectiveCardProps {
 }
 
 export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveCardProps) {
+    // Access users from store to resolve IDs
+    const users = useStore(state => state.users);
+
     const healthColor = {
         'Red': 'bg-red-100 text-red-800 border-red-200',
         'Amber': 'bg-amber-100 text-amber-800 border-amber-200',
         'Green': 'bg-green-100 text-green-800 border-green-200',
     }[objective.currentHealth];
+
+    // Helper to safely get first KR info
+    const firstKR = objective.keyResults.length > 0 ? objective.keyResults[0] : null;
+
+    // Resolve Owner Name
+    const getOwnerName = (id: string) => {
+        const user = users.find(u => u.id === id);
+        return user ? user.name : id;
+    };
+
+    // Calculate total initiatives
+    const totalInitiatives = objective.keyResults.reduce((acc, kr) => acc + kr.initiatives.length, 0);
 
     return (
         <Card className="hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full" onClick={() => onDrillDown(objective.id)}>
@@ -42,14 +58,29 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                         <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Goal</span>
                         <p className="text-foreground/90 line-clamp-1">{objective.goal}</p>
                     </div>
-                    {objective.keyResults.length > 0 && (
+                    {firstKR && (
                         <div>
                             <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Key Result</span>
-                            <p className="text-foreground/90 line-clamp-1 flex items-center">
-                                <Target className="w-3 h-3 mr-1 text-primary" />
-                                {objective.keyResults[0]}
-                                {objective.keyResults.length > 1 && <span className="text-muted-foreground ml-1 text-xs">+{objective.keyResults.length - 1} more</span>}
-                            </p>
+                            <div className="flex flex-col">
+                                <p className="text-foreground/90 line-clamp-1 flex items-center">
+                                    <Target className="w-3 h-3 mr-1 text-primary" />
+                                    {firstKR.description}
+                                    {objective.keyResults.length > 1 && <span className="text-muted-foreground ml-1 text-xs">+{objective.keyResults.length - 1} more</span>}
+                                </p>
+                                {firstKR.ownerId && (
+                                    <p className="text-xs text-muted-foreground ml-4">
+                                        KR Owner: {getOwnerName(firstKR.ownerId)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Initiative Count Badge */}
+                    {totalInitiatives > 0 && (
+                        <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                            <Briefcase className="w-3 h-3 mr-1" />
+                            {totalInitiatives} Included Initiative{totalInitiatives !== 1 ? 's' : ''}
                         </div>
                     )}
                 </div>
