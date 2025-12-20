@@ -1,107 +1,61 @@
 import { useState } from 'react';
-import type { Initiative, StatusUpdate } from '../types';
+import { useStore } from '../store';
 import { InitiativeCard } from './InitiativeCard';
 import { Button } from './ui/button';
-import { Plus, Filter } from 'lucide-react';
-
-// Mock Data
-const MOCK_INITIATIVES: Initiative[] = [
-    {
-        id: '1',
-        name: 'Cloud Migration Phase 1',
-        ownerId: 'Sarah J.',
-        status: 'Active',
-        strategicValue: 'High',
-        targetDate: '2025-12-01',
-        currentHealth: 'Amber',
-        riskScore: 65,
-        tenantId: 't1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '2',
-        name: 'Mobile App Redesign',
-        ownerId: 'Mike T.',
-        status: 'Active',
-        strategicValue: 'Medium',
-        targetDate: '2026-03-15',
-        currentHealth: 'Green',
-        riskScore: 20,
-        tenantId: 't1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '3',
-        name: 'Legacy CRM Sunset',
-        ownerId: 'Jessica R.',
-        status: 'Active',
-        strategicValue: 'Low',
-        targetDate: '2025-10-30',
-        currentHealth: 'Red',
-        riskScore: 85,
-        tenantId: 't1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }
-];
-
-const MOCK_UPDATES: Record<string, StatusUpdate> = {
-    '1': {
-        id: 'u1',
-        initiativeId: '1',
-        authorId: 'Sarah J.',
-        timestamp: new Date().toISOString(),
-        health: 'Amber',
-        confidence: 'High',
-        narrative: 'We are facing some latency issues with the database migration. The team is investigating potential fixes but schedule might slip by 1 week.',
-        aiRiskFlags: [
-            { id: 'r1', type: 'Sentiment', severity: 'Medium', description: 'Uncertainty regarding latency fixes', detectedAt: new Date().toISOString() }
-        ],
-        aiCredibilityScore: 85
-    },
-    '2': {
-        id: 'u2',
-        initiativeId: '2',
-        authorId: 'Mike T.',
-        timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
-        health: 'Green',
-        confidence: 'High',
-        narrative: 'Design phase complete. Engineering handoff scheduled for Friday. No blockers.',
-        aiCredibilityScore: 95
-    },
-    '3': {
-        id: 'u3',
-        initiativeId: '3',
-        authorId: 'Jessica R.',
-        timestamp: new Date(Date.now() - 86400000 * 5).toISOString(),
-        health: 'Red',
-        confidence: 'Medium',
-        narrative: 'Vendor has not responded to data export request. Critical dependency.',
-        aiRiskFlags: [
-            { id: 'r2', type: 'Consistency', severity: 'High', description: 'Dependencies marked as Critical', detectedAt: new Date().toISOString() }
-        ],
-        aiCredibilityScore: 90
-    }
-};
+import { Plus, Filter, Users, LogOut } from 'lucide-react';
+import { CreateInitiativeDialog } from './CreateInitiativeDialog';
+import { TeamDialog } from './TeamDialog';
 
 export function Dashboard() {
-    const [initiatives] = useState<Initiative[]>(MOCK_INITIATIVES);
+    const initiatives = useStore(state => state.initiatives);
+    const updates = useStore(state => state.updates);
+    const logout = useStore(state => state.logout);
+    const user = useStore(state => state.currentUser);
+
+    // Modal State
+    const [isCreateOpen, setCreateOpen] = useState(false);
+    const [isTeamOpen, setTeamOpen] = useState(false);
+
+    // Initial onboarding empty state
+    if (initiatives.length === 0) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+                <div className="max-w-lg text-center space-y-6">
+                    <h1 className="text-3xl font-bold">Welcome to Vantage, {user?.name}</h1>
+                    <p className="text-muted-foreground">
+                        You don't have any initiatives tracked yet. Create your first initiative to start establishing delivery truth.
+                    </p>
+                    <Button size="lg" onClick={() => setCreateOpen(true)}>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Create First Initiative
+                    </Button>
+                </div>
+                {isCreateOpen && <CreateInitiativeDialog onClose={() => setCreateOpen(false)} />}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background p-4 md:p-8">
             <header className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-primary">Status Overview</h1>
-                    <p className="text-muted-foreground">Monday Morning Readout</p>
+                    <p className="text-muted-foreground">Monday Morning Readout • {user?.name}</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={logout}>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setTeamOpen(true)}>
+                        <Users className="w-4 h-4 mr-2" />
+                        Team
+                    </Button>
                     <Button variant="outline" size="sm">
                         <Filter className="w-4 h-4 mr-2" />
                         Filter
                     </Button>
-                    <Button size="sm">
+                    <Button size="sm" onClick={() => setCreateOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
                         New Initiative
                     </Button>
@@ -113,11 +67,14 @@ export function Dashboard() {
                     <InitiativeCard
                         key={init.id}
                         initiative={init}
-                        lastUpdate={MOCK_UPDATES[init.id]}
+                        lastUpdate={updates[init.id]}
                         onDrillDown={(id) => console.log('Drill down to', id)}
                     />
                 ))}
             </main>
+
+            {isCreateOpen && <CreateInitiativeDialog onClose={() => setCreateOpen(false)} />}
+            {isTeamOpen && <TeamDialog onClose={() => setTeamOpen(false)} />}
         </div>
     );
 }
