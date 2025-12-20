@@ -1,14 +1,14 @@
 import { MockCollector, MockSynthesizer, MockAudit } from './agents';
-import type { Initiative, StatusUpdate } from '../types';
+import type { BusinessOutcome, StatusUpdate } from '../types';
 
 export class IntelligenceLoop {
-    static async processUpdate(initiative: Initiative, rawText: string, authorId: string): Promise<StatusUpdate> {
+    static async processUpdate(outcome: BusinessOutcome, rawText: string, authorId: string): Promise<StatusUpdate> {
         // 1. Capture & Parse
         const draft = MockCollector.parseResponse(rawText);
 
         const update: StatusUpdate = {
             id: crypto.randomUUID(),
-            initiativeId: initiative.id,
+            outcomeId: outcome.id,
             authorId: authorId,
             timestamp: new Date().toISOString(),
             health: draft.health || 'Green',
@@ -17,14 +17,14 @@ export class IntelligenceLoop {
         };
 
         // 2. Synthesize & Analyze
-        const analysis = MockSynthesizer.analyzeUpdate(update, [], initiative); // history empty for MVP mock
+        const analysis = MockSynthesizer.analyzeUpdate(update, [], outcome);
 
         update.aiRiskFlags = analysis.riskFlags;
         update.aiCredibilityScore = analysis.credibilityScore;
 
         // 3. Audit
         MockAudit.logEvent({
-            tenantId: initiative.tenantId,
+            tenantId: outcome.tenantId,
             actorId: 'system-synthesizer',
             action: 'analyze_update',
             resourceId: update.id,

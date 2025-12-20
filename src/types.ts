@@ -1,4 +1,4 @@
-export type InitiativeStatus = 'Draft' | 'Active' | 'Paused' | 'Completed' | 'Cancelled';
+export type OutcomeStatus = 'Draft' | 'Active' | 'Paused' | 'Completed' | 'Cancelled';
 export type StrategicValue = 'High' | 'Medium' | 'Low';
 export type UpdateHealth = 'Red' | 'Amber' | 'Green';
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
@@ -13,13 +13,13 @@ export interface User {
     tenantId: string;
 }
 
-export interface Initiative {
+export interface BusinessOutcome {
     id: string;
     name: string;
     description?: string;
     ownerId: string; // Accountable human
     sponsorId?: string; // Executive sponsor
-    status: InitiativeStatus;
+    status: OutcomeStatus;
     strategicValue: StrategicValue;
     targetDate: string; // ISO Date
 
@@ -35,7 +35,7 @@ export interface Initiative {
 
 export interface StatusUpdate {
     id: string;
-    initiativeId: string;
+    outcomeId: string;
     authorId: string;
     timestamp: string;
 
@@ -64,7 +64,7 @@ export interface AuditLogEntry {
     actorId: string;
     action: string;
     resourceId: string;
-    resourceType: 'Initiative' | 'Update' | 'User';
+    resourceType: 'BusinessOutcome' | 'Update' | 'User';
     details: string; // JSON string of changes
     timestamp: string;
 }

@@ -1,22 +1,22 @@
 import { create } from 'zustand';
-import type { Initiative, User, StatusUpdate, InitiativeStatus } from './types';
+import type { BusinessOutcome, User, StatusUpdate, OutcomeStatus } from './types';
 
 interface AppState {
     currentUser: User | null;
     users: User[];
-    initiatives: Initiative[];
-    updates: Record<string, StatusUpdate>; // keyed by initiativeId for simplicity in mock
+    outcomes: BusinessOutcome[];
+    updates: Record<string, StatusUpdate>; // keyed by outcomeId
 
     // Plan Limits
     planName: 'Free' | 'Pro';
-    maxActiveInitiatives: number;
+    maxActiveOutcomes: number;
 
     // Actions
     login: (email: string) => void;
     logout: () => void;
     addUser: (email: string, role: 'Admin' | 'Member') => void;
-    createInitiative: (name: string, ownerId: string, strategicValue: 'High' | 'Medium' | 'Low', targetDate: string) => void;
-    updateInitiativeStatus: (id: string, status: InitiativeStatus) => void;
+    createOutcome: (name: string, ownerId: string, strategicValue: 'High' | 'Medium' | 'Low', targetDate: string) => void;
+    updateOutcomeStatus: (id: string, status: OutcomeStatus) => void;
     addUpdate: (update: StatusUpdate) => void;
 }
 
@@ -29,10 +29,10 @@ const INITIAL_USERS: User[] = [
 export const useStore = create<AppState>((set, get) => ({
     currentUser: null, // Start logged out to show signup flow
     users: INITIAL_USERS,
-    initiatives: [], // Start empty to show creation flow
+    outcomes: [],
     updates: {},
     planName: 'Free',
-    maxActiveInitiatives: 2,
+    maxActiveOutcomes: 2,
 
     login: (email: string) => {
         // Mock login - just find user or create admin if first time
@@ -67,11 +67,9 @@ export const useStore = create<AppState>((set, get) => ({
         }]
     })),
 
-    createInitiative: (name, ownerId, strategicValue, targetDate) => set(state => {
-        // Note: We won't block here strictly to allow UI to handle the "Soft Cap" warning, 
-        // but in a real backend we might throw.
+    createOutcome: (name, ownerId, strategicValue, targetDate) => set(state => {
 
-        const newInit: Initiative = {
+        const newOutcome: BusinessOutcome = {
             id: crypto.randomUUID(),
             name,
             ownerId: state.users.find(u => u.id === ownerId)?.name || ownerId, // Store name for simple display in mock
@@ -85,14 +83,14 @@ export const useStore = create<AppState>((set, get) => ({
             updatedAt: new Date().toISOString()
         };
 
-        return { initiatives: [...state.initiatives, newInit] };
+        return { outcomes: [...state.outcomes, newOutcome] };
     }),
 
-    updateInitiativeStatus: (id, status) => set(state => ({
-        initiatives: state.initiatives.map(i => i.id === id ? { ...i, status } : i)
+    updateOutcomeStatus: (id, status) => set(state => ({
+        outcomes: state.outcomes.map(i => i.id === id ? { ...i, status } : i)
     })),
 
     addUpdate: (update) => set(state => ({
-        updates: { ...state.updates, [update.initiativeId]: update } // simplified generic store
+        updates: { ...state.updates, [update.outcomeId]: update }
     })),
 }));

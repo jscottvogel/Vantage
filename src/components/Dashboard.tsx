@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { InitiativeCard } from './InitiativeCard';
+import { BusinessOutcomeCard } from './BusinessOutcomeCard';
 import { Button } from './ui/button';
 import { Plus, Filter, Users, LogOut } from 'lucide-react';
-import { CreateInitiativeDialog } from './CreateInitiativeDialog';
+import { CreateOutcomeDialog } from './CreateOutcomeDialog';
 import { TeamDialog } from './TeamDialog';
 
 export function Dashboard() {
-    const initiatives = useStore(state => state.initiatives);
+    const outcomes = useStore(state => state.outcomes);
     const updates = useStore(state => state.updates);
     const logout = useStore(state => state.logout);
     const user = useStore(state => state.currentUser);
@@ -17,20 +17,20 @@ export function Dashboard() {
     const [isTeamOpen, setTeamOpen] = useState(false);
 
     // Initial onboarding empty state
-    if (initiatives.length === 0) {
+    if (outcomes.length === 0) {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
                 <div className="max-w-lg text-center space-y-6">
                     <h1 className="text-3xl font-bold">Welcome to Vantage, {user?.name}</h1>
                     <p className="text-muted-foreground">
-                        You don't have any initiatives tracked yet. Create your first initiative to start establishing delivery truth.
+                        You don't have any outcomes tracked yet. Create your first business outcome to start establishing delivery truth.
                     </p>
                     <Button size="lg" onClick={() => setCreateOpen(true)}>
                         <Plus className="w-5 h-5 mr-2" />
-                        Create First Initiative
+                        Create First Outcome
                     </Button>
                 </div>
-                {isCreateOpen && <CreateInitiativeDialog onClose={() => setCreateOpen(false)} />}
+                {isCreateOpen && <CreateOutcomeDialog onClose={() => setCreateOpen(false)} />}
             </div>
         );
     }
@@ -57,23 +57,23 @@ export function Dashboard() {
                     </Button>
                     <Button size="sm" onClick={() => setCreateOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
-                        New Initiative
+                        New Outcome
                     </Button>
                 </div>
             </header>
 
             <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {initiatives.map((init) => (
-                    <InitiativeCard
-                        key={init.id}
-                        initiative={init}
-                        lastUpdate={updates[init.id]}
+                {outcomes.map((outcome) => (
+                    <BusinessOutcomeCard
+                        key={outcome.id}
+                        outcome={outcome}
+                        lastUpdate={updates[outcome.id]}
                         onDrillDown={(id) => console.log('Drill down to', id)}
                     />
                 ))}
             </main>
 
-            {isCreateOpen && <CreateInitiativeDialog onClose={() => setCreateOpen(false)} />}
+            {isCreateOpen && <CreateOutcomeDialog onClose={() => setCreateOpen(false)} />}
             {isTeamOpen && <TeamDialog onClose={() => setTeamOpen(false)} />}
         </div>
     );

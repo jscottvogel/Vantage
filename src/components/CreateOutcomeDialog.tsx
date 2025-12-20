@@ -4,27 +4,27 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { AlertTriangle } from 'lucide-react';
 
-interface CreateInitiativeDialogProps {
+interface CreateOutcomeDialogProps {
     onClose: () => void;
 }
 
-export function CreateInitiativeDialog({ onClose }: CreateInitiativeDialogProps) {
+export function CreateOutcomeDialog({ onClose }: CreateOutcomeDialogProps) {
     const [name, setName] = useState('');
     const [targetDate, setTargetDate] = useState('');
     const [strategicValue, setStrategicValue] = useState<'High' | 'Medium' | 'Low'>('Medium');
 
     const currentUser = useStore(state => state.currentUser);
-    const createInitiative = useStore(state => state.createInitiative);
-    const initiatives = useStore(state => state.initiatives);
-    const maxActive = useStore(state => state.maxActiveInitiatives);
+    const createOutcome = useStore(state => state.createOutcome);
+    const outcomes = useStore(state => state.outcomes);
+    const maxActive = useStore(state => state.maxActiveOutcomes);
 
-    const activeCount = initiatives.filter(i => i.status === 'Active').length;
+    const activeCount = outcomes.filter(i => i.status === 'Active').length;
     const isOverCap = activeCount >= maxActive;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (name && targetDate && currentUser) {
-            createInitiative(name, currentUser.id, strategicValue, targetDate);
+            createOutcome(name, currentUser.id, strategicValue, targetDate);
             onClose();
         }
     };
@@ -33,7 +33,7 @@ export function CreateInitiativeDialog({ onClose }: CreateInitiativeDialogProps)
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md relative">
                 <CardHeader>
-                    <CardTitle>New Initiative</CardTitle>
+                    <CardTitle>New Business Outcome</CardTitle>
                     <CardDescription>Track a new delivery object.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -41,7 +41,7 @@ export function CreateInitiativeDialog({ onClose }: CreateInitiativeDialogProps)
                         <div className="bg-amber-100 border-l-4 border-amber-500 p-4 mb-4 text-amber-800 text-sm flex items-start">
                             <AlertTriangle className="w-4 h-4 mr-2 mt-0.5 shrink-0" />
                             <div>
-                                <strong>Soft Cap Reached:</strong> You have {activeCount} active initiatives (Plan limit: {maxActive}).
+                                <strong>Soft Cap Reached:</strong> You have {activeCount} active outcomes (Plan limit: {maxActive}).
                                 You can still create this, but please consider upgrading or archiving old items properly.
                             </div>
                         </div>
@@ -49,7 +49,7 @@ export function CreateInitiativeDialog({ onClose }: CreateInitiativeDialogProps)
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Initiative Name</label>
+                            <label className="text-sm font-medium">Outcome Name</label>
                             <input
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 placeholder="e.g. Cloud Migration Phase 2"
@@ -87,7 +87,7 @@ export function CreateInitiativeDialog({ onClose }: CreateInitiativeDialogProps)
 
                         <div className="flex justify-end gap-2 mt-4">
                             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                            <Button type="submit">Create Initiative</Button>
+                            <Button type="submit">Create Outcome</Button>
                         </div>
                     </form>
                 </CardContent>

@@ -1,37 +1,37 @@
-import type { Initiative, StatusUpdate } from '../types';
+import type { BusinessOutcome, StatusUpdate } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { AlertTriangle, Clock, TrendingUp, HelpCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-interface InitiativeCardProps {
-    initiative: Initiative;
+interface BusinessOutcomeCardProps {
+    outcome: BusinessOutcome;
     lastUpdate?: StatusUpdate;
     onDrillDown: (id: string) => void;
 }
 
-export function InitiativeCard({ initiative, lastUpdate, onDrillDown }: InitiativeCardProps) {
+export function BusinessOutcomeCard({ outcome, lastUpdate, onDrillDown }: BusinessOutcomeCardProps) {
     const healthColor = {
         'Red': 'bg-red-100 text-red-800 border-red-200',
         'Amber': 'bg-amber-100 text-amber-800 border-amber-200',
         'Green': 'bg-green-100 text-green-800 border-green-200',
-    }[initiative.currentHealth];
+    }[outcome.currentHealth];
 
     return (
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onDrillDown(initiative.id)}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onDrillDown(outcome.id)}>
             <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="space-y-1">
                     <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        {initiative.name}
-                        {initiative.riskScore > 50 && (
+                        {outcome.name}
+                        {outcome.riskScore > 50 && (
                             <Badge variant="destructive" className="ml-2 text-[10px] h-5">Risk: High</Badge>
                         )}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">Owner: {initiative.ownerId}</p>
+                    <p className="text-sm text-muted-foreground">Owner: {outcome.ownerId}</p>
                 </div>
                 <div className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold border", healthColor)}>
-                    {initiative.currentHealth}
+                    {outcome.currentHealth}
                 </div>
             </CardHeader>
             <CardContent>
@@ -67,9 +67,9 @@ export function InitiativeCard({ initiative, lastUpdate, onDrillDown }: Initiati
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Target: {new Date(initiative.targetDate).toLocaleDateString()}</span>
+                        <span>Target: {new Date(outcome.targetDate).toLocaleDateString()}</span>
                         <span className="flex items-center">
-                            {initiative.strategicValue} Value
+                            {outcome.strategicValue} Value
                         </span>
                     </div>
                 </div>

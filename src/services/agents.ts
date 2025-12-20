@@ -1,13 +1,13 @@
-import type { Initiative, StatusUpdate, RiskSignal, AuditLogEntry } from '../types';
+import type { BusinessOutcome, StatusUpdate, RiskSignal, AuditLogEntry } from '../types';
 
 // Agent Interfaces
 export interface CollectorAgent {
-    generatePrompt(initiative: Initiative, lastUpdate?: StatusUpdate): string;
+    generatePrompt(outcome: BusinessOutcome, lastUpdate?: StatusUpdate): string;
     parseResponse(responseText: string): Partial<StatusUpdate>;
 }
 
 export interface SynthesizerAgent {
-    analyzeUpdate(update: StatusUpdate, history: StatusUpdate[], initiative: Initiative): {
+    analyzeUpdate(update: StatusUpdate, history: StatusUpdate[], outcome: BusinessOutcome): {
         riskFlags: RiskSignal[];
         credibilityScore: number;
         summary: string;
@@ -21,14 +21,13 @@ export interface AuditAgent {
 // Mock Implementations
 
 export const MockCollector: CollectorAgent = {
-    generatePrompt: (initiative, lastUpdate) => {
+    generatePrompt: (outcome, lastUpdate) => {
         if (!lastUpdate) {
-            return `Hi ${initiative.ownerId}, please provide the first status update for ${initiative.name}. What is the current outlook?`;
+            return `Hi ${outcome.ownerId}, please provide the first status update for ${outcome.name}. What is the current outlook?`;
         }
-        return `Hi ${initiative.ownerId}, last week you reported ${lastUpdate.health}. What has changed? Is the target date of ${initiative.targetDate} still realistic?`;
+        return `Hi ${outcome.ownerId}, last week you reported ${lastUpdate.health}. What has changed? Is the target date of ${outcome.targetDate} still realistic?`;
     },
     parseResponse: (text) => {
-        // Simple mock heuristic
         const health = text.toLowerCase().includes('delayed') || text.toLowerCase().includes('risk') ? 'Red' : 'Green';
         return {
             narrative: text,
@@ -39,10 +38,9 @@ export const MockCollector: CollectorAgent = {
 };
 
 export const MockSynthesizer: SynthesizerAgent = {
-    analyzeUpdate: (update, _history, _initiative) => {
+    analyzeUpdate: (update, _history, _outcome) => {
         const risks: RiskSignal[] = [];
 
-        // Check for Drift
         if (update.health === 'Green' && update.narrative.length < 20) {
             risks.push({
                 id: crypto.randomUUID(),
@@ -53,7 +51,6 @@ export const MockSynthesizer: SynthesizerAgent = {
             });
         }
 
-        // Check for "Green but blocked" consistency
         if (update.health === 'Green' && update.narrative.toLowerCase().includes('blocker')) {
             risks.push({
                 id: crypto.randomUUID(),
@@ -62,11 +59,6 @@ export const MockSynthesizer: SynthesizerAgent = {
                 description: 'Narrative mentions blockers but health is Green.',
                 detectedAt: new Date().toISOString()
             });
-        }
-
-        // Check for "Red but confident" (just an example pattern)
-        if (update.health === 'Red' && update.confidence === 'High') {
-            // No risk flag, just noting logic was here.
         }
 
         return {
@@ -80,6 +72,5 @@ export const MockSynthesizer: SynthesizerAgent = {
 export const MockAudit: AuditAgent = {
     logEvent: (entry) => {
         console.log('[AUDIT AGENT]', entry);
-        // In real app, push to DynamoDB
     }
 };
