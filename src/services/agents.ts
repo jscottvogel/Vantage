@@ -1,13 +1,13 @@
-import type { BusinessOutcome, StatusUpdate, RiskSignal, AuditLogEntry } from '../types';
+import type { StrategicObjective, StatusUpdate, RiskSignal, AuditLogEntry } from '../types';
 
 // Agent Interfaces
 export interface CollectorAgent {
-    generatePrompt(outcome: BusinessOutcome, lastUpdate?: StatusUpdate): string;
+    generatePrompt(objective: StrategicObjective, lastUpdate?: StatusUpdate): string;
     parseResponse(responseText: string): Partial<StatusUpdate>;
 }
 
 export interface SynthesizerAgent {
-    analyzeUpdate(update: StatusUpdate, history: StatusUpdate[], outcome: BusinessOutcome): {
+    analyzeUpdate(update: StatusUpdate, history: StatusUpdate[], objective: StrategicObjective): {
         riskFlags: RiskSignal[];
         credibilityScore: number;
         summary: string;
@@ -21,11 +21,11 @@ export interface AuditAgent {
 // Mock Implementations
 
 export const MockCollector: CollectorAgent = {
-    generatePrompt: (outcome, lastUpdate) => {
+    generatePrompt: (objective, lastUpdate) => {
         if (!lastUpdate) {
-            return `Hi ${outcome.ownerId}, please provide the first status update for ${outcome.name}. What is the current outlook?`;
+            return `Hi ${objective.ownerId}, please provide the first status update for ${objective.name}. What is the current outlook?`;
         }
-        return `Hi ${outcome.ownerId}, last week you reported ${lastUpdate.health}. What has changed? Is the target date of ${outcome.targetDate} still realistic?`;
+        return `Hi ${objective.ownerId}, last week you reported ${lastUpdate.health}. What has changed? Is the target date of ${objective.targetDate} still realistic?`;
     },
     parseResponse: (text) => {
         const health = text.toLowerCase().includes('delayed') || text.toLowerCase().includes('risk') ? 'Red' : 'Green';
@@ -38,7 +38,7 @@ export const MockCollector: CollectorAgent = {
 };
 
 export const MockSynthesizer: SynthesizerAgent = {
-    analyzeUpdate: (update, _history, _outcome) => {
+    analyzeUpdate: (update, _history, _objective) => {
         const risks: RiskSignal[] = [];
 
         if (update.health === 'Green' && update.narrative.length < 20) {

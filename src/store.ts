@@ -1,22 +1,30 @@
 import { create } from 'zustand';
-import type { BusinessOutcome, User, StatusUpdate, OutcomeStatus } from './types';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus } from './types';
 
 interface AppState {
     currentUser: User | null;
     users: User[];
-    outcomes: BusinessOutcome[];
-    updates: Record<string, StatusUpdate>; // keyed by outcomeId
+    objectives: StrategicObjective[];
+    updates: Record<string, StatusUpdate>; // keyed by objectiveId
 
     // Plan Limits
     planName: 'Free' | 'Pro';
-    maxActiveOutcomes: number;
+    maxActiveObjectives: number;
 
     // Actions
     login: (email: string) => void;
     logout: () => void;
     addUser: (email: string, role: 'Admin' | 'Member') => void;
-    createOutcome: (name: string, ownerId: string, strategicValue: 'High' | 'Medium' | 'Low', targetDate: string) => void;
-    updateOutcomeStatus: (id: string, status: OutcomeStatus) => void;
+    createObjective: (
+        name: string,
+        ownerId: string,
+        strategicValue: 'High' | 'Medium' | 'Low',
+        targetDate: string,
+        goal: string,
+        benefit: string,
+        keyResults: string[]
+    ) => void;
+    updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
     addUpdate: (update: StatusUpdate) => void;
 }
 
@@ -29,10 +37,10 @@ const INITIAL_USERS: User[] = [
 export const useStore = create<AppState>((set, get) => ({
     currentUser: null, // Start logged out to show signup flow
     users: INITIAL_USERS,
-    outcomes: [],
+    objectives: [],
     updates: {},
     planName: 'Free',
-    maxActiveOutcomes: 2,
+    maxActiveObjectives: 2,
 
     login: (email: string) => {
         // Mock login - just find user or create admin if first time
@@ -67,15 +75,18 @@ export const useStore = create<AppState>((set, get) => ({
         }]
     })),
 
-    createOutcome: (name, ownerId, strategicValue, targetDate) => set(state => {
+    createObjective: (name, ownerId, strategicValue, targetDate, goal, benefit, keyResults) => set(state => {
 
-        const newOutcome: BusinessOutcome = {
+        const newObjective: StrategicObjective = {
             id: crypto.randomUUID(),
             name,
             ownerId: state.users.find(u => u.id === ownerId)?.name || ownerId, // Store name for simple display in mock
             status: 'Active',
             strategicValue,
             targetDate,
+            goal,
+            benefit,
+            keyResults,
             currentHealth: 'Green', // Default
             riskScore: 0,
             tenantId: state.currentUser?.tenantId || 't1',
@@ -83,14 +94,14 @@ export const useStore = create<AppState>((set, get) => ({
             updatedAt: new Date().toISOString()
         };
 
-        return { outcomes: [...state.outcomes, newOutcome] };
+        return { objectives: [...state.objectives, newObjective] };
     }),
 
-    updateOutcomeStatus: (id, status) => set(state => ({
-        outcomes: state.outcomes.map(i => i.id === id ? { ...i, status } : i)
+    updateObjectiveStatus: (id, status) => set(state => ({
+        objectives: state.objectives.map(i => i.id === id ? { ...i, status } : i)
     })),
 
     addUpdate: (update) => set(state => ({
-        updates: { ...state.updates, [update.outcomeId]: update }
+        updates: { ...state.updates, [update.objectiveId]: update }
     })),
 }));

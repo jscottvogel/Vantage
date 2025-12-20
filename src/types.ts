@@ -13,15 +13,19 @@ export interface User {
     tenantId: string;
 }
 
-export interface BusinessOutcome {
+export interface StrategicObjective {
     id: string;
     name: string;
-    description?: string;
     ownerId: string; // Accountable human
     sponsorId?: string; // Executive sponsor
     status: OutcomeStatus;
     strategicValue: StrategicValue;
     targetDate: string; // ISO Date
+
+    // New Fields
+    goal: string;
+    benefit: string;
+    keyResults: string[]; // Simple list of strings for MVP
 
     // Computed/Derived
     currentHealth: UpdateHealth;
@@ -35,7 +39,7 @@ export interface BusinessOutcome {
 
 export interface StatusUpdate {
     id: string;
-    outcomeId: string;
+    objectiveId: string; // Renamed from outcomeId
     authorId: string;
     timestamp: string;
 
@@ -64,7 +68,7 @@ export interface AuditLogEntry {
     actorId: string;
     action: string;
     resourceId: string;
-    resourceType: 'BusinessOutcome' | 'Update' | 'User';
+    resourceType: 'StrategicObjective' | 'Update' | 'User';
     details: string; // JSON string of changes
     timestamp: string;
 }
