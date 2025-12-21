@@ -1,7 +1,7 @@
-import type { StrategicObjective, StatusUpdate } from '../types';
+import type { StrategicObjective, StatusUpdate, KeyResultHeartbeat } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Clock, Target, Briefcase, Layers } from 'lucide-react';
+import { Clock, Target, Briefcase, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
@@ -14,6 +14,29 @@ interface ObjectiveCardProps {
 export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveCardProps) {
     // Access users from store to resolve IDs
     const users = useStore(state => state.users);
+
+    // Find latest KR Heartbeat
+    let latestHeartbeat: KeyResultHeartbeat | null = null;
+    if (objective.outcomes) {
+        objective.outcomes.forEach(o => {
+            o.keyResults.forEach(kr => {
+                if (kr.heartbeats && kr.heartbeats.length > 0) {
+                    const last = kr.heartbeats[kr.heartbeats.length - 1];
+                    if (!latestHeartbeat || new Date(last.timestamp) > new Date(latestHeartbeat.timestamp)) {
+                        latestHeartbeat = last;
+                    }
+                }
+            });
+        });
+    }
+
+    const trendIcon = (trend: string) => {
+        switch (trend) {
+            case 'Improving': return <TrendingUp className="w-3 h-3 text-green-600" />;
+            case 'Declining': return <TrendingDown className="w-3 h-3 text-red-600" />;
+            default: return <Minus className="w-3 h-3 text-gray-400" />;
+        }
+    };
 
     const healthColor = {
         'Red': 'bg-red-100 text-red-800 border-red-200',
@@ -79,6 +102,29 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                                         Owner: {getOwnerName(firstKR.ownerId)}
                                     </p>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Latest Confidence Signal */}
+                    {latestHeartbeat && (
+                        <div className="bg-slate-50 border rounded-md p-2 mt-2">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                                    <Target className="w-3 h-3" /> Confidence Signal
+                                </span>
+                                <div className="flex items-center text-xs">
+                                    {trendIcon(latestHeartbeat.confidenceTrend)}
+                                    <span className="ml-1 text-muted-foreground">{latestHeartbeat.confidenceTrend}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <Badge variant={latestHeartbeat.overallConfidence === 'High' ? 'default' : latestHeartbeat.overallConfidence === 'Medium' ? 'secondary' : 'destructive'} className="text-[10px] h-5">
+                                    {latestHeartbeat.overallConfidence}
+                                </Badge>
+                                <p className="text-xs text-muted-foreground line-clamp-2 leading-tight">
+                                    "{latestHeartbeat.heartbeatSummary}"
+                                </p>
                             </div>
                         </div>
                     )}

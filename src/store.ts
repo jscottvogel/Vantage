@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat } from './types';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative } from './types';
 
 interface AppState {
     currentUser: User | null;
@@ -34,6 +34,9 @@ interface AppState {
     addUpdate: (update: StatusUpdate) => void;
     addHeartbeat: (objectiveId: string, initiativeId: string, heartbeat: Heartbeat) => void;
     addKeyResultHeartbeat: (objectiveId: string, krId: string, heartbeat: KeyResultHeartbeat) => void;
+    addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => void;
+    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => void;
+    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => void;
 }
 
 // Initial Mock Data
@@ -167,6 +170,57 @@ export const useStore = create<AppState>((set, get) => ({
                         kr.id === krId ? {
                             ...kr,
                             heartbeats: [...kr.heartbeats, heartbeat]
+                        } : kr
+                    )
+                }))
+            } : obj
+        )
+    })),
+
+    addInitiative: (objectiveId, krId, initiative) => set(state => ({
+        objectives: state.objectives.map(obj =>
+            obj.id === objectiveId ? {
+                ...obj,
+                outcomes: obj.outcomes.map(out => ({
+                    ...out,
+                    keyResults: out.keyResults.map(kr =>
+                        kr.id === krId ? {
+                            ...kr,
+                            initiatives: [...kr.initiatives, initiative]
+                        } : kr
+                    )
+                }))
+            } : obj
+        )
+    })),
+
+    removeInitiative: (objectiveId, krId, initiativeId) => set(state => ({
+        objectives: state.objectives.map(obj =>
+            obj.id === objectiveId ? {
+                ...obj,
+                outcomes: obj.outcomes.map(out => ({
+                    ...out,
+                    keyResults: out.keyResults.map(kr =>
+                        kr.id === krId ? {
+                            ...kr,
+                            initiatives: kr.initiatives.filter(i => i.id !== initiativeId)
+                        } : kr
+                    )
+                }))
+            } : obj
+        )
+    })),
+
+    updateInitiative: (objectiveId, krId, initiativeId, updates) => set(state => ({
+        objectives: state.objectives.map(obj =>
+            obj.id === objectiveId ? {
+                ...obj,
+                outcomes: obj.outcomes.map(out => ({
+                    ...out,
+                    keyResults: out.keyResults.map(kr =>
+                        kr.id === krId ? {
+                            ...kr,
+                            initiatives: kr.initiatives.map(i => i.id === initiativeId ? { ...i, ...updates } : i)
                         } : kr
                     )
                 }))

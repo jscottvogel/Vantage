@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
-import { X, Target, Briefcase, Layers, ArrowRight, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { X, Target, Briefcase, Layers, ArrowRight, Activity, TrendingUp, TrendingDown, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { KeyResultHeartbeatDialog } from './KeyResultHeartbeatDialog';
-import type { KeyResultHeartbeat } from '../types';
+import type { KeyResultHeartbeat, Initiative } from '../types';
 
 interface ObjectiveDetailDialogProps {
     objectiveId: string;
@@ -18,6 +18,8 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
     const objective = store.objectives.find(o => o.id === objectiveId);
 
     const [selectedKR, setSelectedKR] = useState<{ krId: string } | null>(null);
+    const [addingToKR, setAddingToKR] = useState<string | null>(null);
+    const [newInitName, setNewInitName] = useState('');
 
     if (!objective) return null;
 
@@ -31,6 +33,34 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
             case 'Improving': return <TrendingUp className="w-3 h-3 text-green-600" />;
             case 'Declining': return <TrendingDown className="w-3 h-3 text-red-600" />;
             default: return <Minus className="w-3 h-3 text-gray-400" />;
+        }
+    };
+
+    const handleAddInitiative = (krId: string) => {
+        if (!newInitName.trim()) return;
+
+        const newInitiative: Initiative = {
+            id: crypto.randomUUID(),
+            name: newInitName,
+            // Default values
+            ownerId: store.currentUser?.id || 'Unassigned',
+            status: 'active',
+            startDate: new Date().toISOString(),
+            targetEndDate: objective.targetDate,
+            heartbeatCadence: 'weekly',
+            supportedKeyResults: [],
+            heartbeats: []
+        };
+
+        store.addInitiative(objectiveId, krId, newInitiative);
+        setAddingToKR(null);
+        setNewInitName('');
+    };
+
+    const handleDeleteInitiative = (krId: string, initId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this initiative?')) {
+            store.removeInitiative(objectiveId, krId, initId);
         }
     };
 
@@ -107,20 +137,43 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
 
                                             {/* Initiatives List */}
                                             <div className="ml-6 space-y-2">
-                                                <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
-                                                    <Briefcase className="w-3 h-3" /> Supporting Initiatives
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                                                        <Briefcase className="w-3 h-3" /> Supporting Initiatives
+                                                    </div>
+                                                    {addingToKR !== kr.id && (
+                                                        <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => setAddingToKR(kr.id)}>
+                                                            <Plus className="w-3 h-3 mr-1" /> Add
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                                {kr.initiatives.length === 0 ? (
+
+                                                {addingToKR === kr.id && (
+                                                    <div className="flex items-center gap-2 mb-2 p-2 bg-muted/20 rounded border">
+                                                        <input
+                                                            autoFocus
+                                                            className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+                                                            placeholder="Initiative Name"
+                                                            value={newInitName}
+                                                            onChange={e => setNewInitName(e.target.value)}
+                                                            onKeyDown={e => e.key === 'Enter' && handleAddInitiative(kr.id)}
+                                                        />
+                                                        <Button size="sm" onClick={() => handleAddInitiative(kr.id)}>Save</Button>
+                                                        <Button size="sm" variant="ghost" onClick={() => { setAddingToKR(null); setNewInitName(''); }}>Cancel</Button>
+                                                    </div>
+                                                )}
+
+                                                {kr.initiatives.length === 0 && addingToKR !== kr.id ? (
                                                     <div className="text-sm text-muted-foreground italic">No initiatives defined.</div>
                                                 ) : (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         {kr.initiatives.map((init) => (
                                                             <div key={init.id}
-                                                                className="flex items-center justify-between p-3 border rounded hover:bg-muted/50 cursor-pointer transition-colors group"
+                                                                className="flex items-center justify-between p-3 border rounded hover:bg-muted/50 cursor-pointer transition-colors group relative"
                                                                 onClick={() => onSelectInitiative(init.id)}
                                                             >
                                                                 <div className="space-y-1">
-                                                                    <div className="font-medium text-sm">{init.name}</div>
+                                                                    <div className="font-medium text-sm pr-6">{init.name}</div>
                                                                     <div className="flex gap-2">
                                                                         <Badge variant="outline" className="text-[10px] h-5">{init.status}</Badge>
                                                                         {init.heartbeats.length > 0 && (
@@ -130,7 +183,15 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        onClick={(e) => handleDeleteInitiative(kr.id, init.id, e)}
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
