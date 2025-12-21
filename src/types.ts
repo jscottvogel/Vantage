@@ -83,11 +83,41 @@ export interface Heartbeat {
     ownerAttestation: OwnerAttestation;
 }
 
+export type Confidence = 'High' | 'Medium' | 'Low';
+export type ConfidenceTrend = 'Improving' | 'Stable' | 'Declining';
+
+export interface HeartbeatLink {
+    initiativeId: string;
+    influenceLevel: 'Primary' | 'Supporting';
+}
+
+export interface KeyResultHeartbeat {
+    id: string;
+    keyResultId: string;
+    keyResultStatement: string; // Snapshot of description
+    timestamp: string;
+
+    overallConfidence: Confidence;
+    confidenceTrend: ConfidenceTrend;
+
+    primaryInitiatives: HeartbeatLink[];
+    confidenceDrivers: string[];
+    riskDrivers: string[];
+
+    knownUnknowns: string[];
+    informationGaps: string[];
+    confidenceLimitations: string;
+
+    heartbeatSummary: string;
+    sourceInitiativeHeartbeatIds: string[];
+}
+
 export interface KeyResult {
     id: string;
     description: string;
     ownerId: string; // References User.id
     initiatives: Initiative[];
+    heartbeats: KeyResultHeartbeat[];
 }
 
 export interface Outcome {

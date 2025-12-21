@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat } from './types';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat } from './types';
 
 interface AppState {
     currentUser: User | null;
@@ -33,6 +33,7 @@ interface AppState {
     updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
     addUpdate: (update: StatusUpdate) => void;
     addHeartbeat: (objectiveId: string, initiativeId: string, heartbeat: Heartbeat) => void;
+    addKeyResultHeartbeat: (objectiveId: string, krId: string, heartbeat: KeyResultHeartbeat) => void;
 }
 
 // Initial Mock Data
@@ -104,6 +105,7 @@ export const useStore = create<AppState>((set, get) => ({
                 keyResults: out.keyResults.map(kr => ({
                     ...kr,
                     id: crypto.randomUUID(),
+                    heartbeats: [], // Init empty heartbeats
                     initiatives: kr.initiatives.map(init => ({
                         ...init,
                         id: crypto.randomUUID(),
@@ -150,6 +152,23 @@ export const useStore = create<AppState>((set, get) => ({
                             } : init
                         )
                     }))
+                }))
+            } : obj
+        )
+    })),
+
+    addKeyResultHeartbeat: (objectiveId, krId, heartbeat) => set(state => ({
+        objectives: state.objectives.map(obj =>
+            obj.id === objectiveId ? {
+                ...obj,
+                outcomes: obj.outcomes.map(out => ({
+                    ...out,
+                    keyResults: out.keyResults.map(kr =>
+                        kr.id === krId ? {
+                            ...kr,
+                            heartbeats: [...kr.heartbeats, heartbeat]
+                        } : kr
+                    )
                 }))
             } : obj
         )
