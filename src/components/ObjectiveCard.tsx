@@ -1,4 +1,4 @@
-import type { StrategicObjective, StatusUpdate, KeyResultHeartbeat } from '../types';
+import type { StrategicObjective, StatusUpdate, KeyResultHeartbeat, ConfidenceTrend } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Clock, Target, Briefcase, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -18,19 +18,19 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
     // Find latest KR Heartbeat
     let latestHeartbeat: KeyResultHeartbeat | null = null;
     if (objective.outcomes) {
-        objective.outcomes.forEach(o => {
-            o.keyResults.forEach(kr => {
+        for (const o of objective.outcomes) {
+            for (const kr of o.keyResults) {
                 if (kr.heartbeats && kr.heartbeats.length > 0) {
                     const last = kr.heartbeats[kr.heartbeats.length - 1];
                     if (!latestHeartbeat || new Date(last.timestamp) > new Date(latestHeartbeat.timestamp)) {
                         latestHeartbeat = last;
                     }
                 }
-            });
-        });
+            }
+        }
     }
 
-    const trendIcon = (trend: string) => {
+    const trendIcon = (trend: ConfidenceTrend | string) => {
         switch (trend) {
             case 'Improving': return <TrendingUp className="w-3 h-3 text-green-600" />;
             case 'Declining': return <TrendingDown className="w-3 h-3 text-red-600" />;
