@@ -3,7 +3,18 @@ import type { Schema } from '../../amplify/data/resource';
 
 const client = generateClient<Schema>();
 
+/**
+ * Service for sending system notifications.
+ * Currently supports Heartbeat notifications via AWS Amplify Data mutations.
+ */
 export const NotificationService = {
+    /**
+     * Triggers a heartbeat notification email to a recipient.
+     * @param recipientEmail The email address of the recipient.
+     * @param link The deep link URL to the item needing attention.
+     * @param itemName The name of the Objective, Key Result, or Initiative.
+     * @returns Promise<{ success: boolean; message?: unknown; error?: unknown }>
+     */
     async sendHeartbeatNotification(recipientEmail: string, link: string, itemName: string) {
         try {
             const response = await client.mutations.sendHeartbeatNotification({
@@ -13,13 +24,9 @@ export const NotificationService = {
                 messageBody: `Please update the heartbeat for ${itemName}.`
             });
             return { success: true, message: response };
-        } catch (error: any) {
-            // Implicit Dev Fallback
-            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured') || error.message?.includes('User pool client') || !client) {
-                console.log(`[Dev Notification] To: ${recipientEmail}, Item: ${itemName}`);
-                return { success: true, message: "Dev email sent (Simulated)" };
-            }
-            console.error('Notification Error:', error);
+        } catch (error) {
+            console.error('Notification Service Error:', error);
+            // In a real app, we might want to log this to a monitoring service (e.g. CloudWatch, Sentry)
             return { success: false, error };
         }
     }

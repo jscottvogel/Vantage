@@ -1,7 +1,15 @@
 import { signIn, signUp, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 import type { User } from '../types';
 
+/**
+ * Service to handle Authentication interactions with AWS Cognito.
+ * Provides methods for signing up, signing in, signing out, and retrieving current user details.
+ */
 export const AuthService = {
+    /**
+     * Retrieves the currently authenticated user from Cognito and maps attributes to the User type.
+     * @returns Promise<User | null> The current user or null if not authenticated.
+     */
     async getCurrentUser(): Promise<User | null> {
         try {
             const authUser = await getCurrentUser();
@@ -16,79 +24,63 @@ export const AuthService = {
                 tenantId: attributes['custom:tenant_id'] || '',
                 status: 'Active'
             };
-        } catch (error: any) {
-            // Implicit Dev Fallback: If Amplify is not configured (or dummy config), allow dev login
-            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured')) {
-                const stored = localStorage.getItem('vantage_dev_user');
-                return stored ? JSON.parse(stored) : null;
-            }
+        } catch (error) {
+            // No current user session found
             return null;
         }
     },
 
-    async signIn(_email: string) {
-        throw new Error("UI needs to collect password");
+    /**
+     * @deprecated Use signInWithPassword instead.
+     */
+    async signIn(_email: string): Promise<void> {
+        throw new Error("UI needs to collect password. Use signInWithPassword instead.");
     },
 
+    /**
+     * Signs in a user with username (email) and password.
+     * @param username The user's email address.
+     * @param password The user's password.
+     * @returns Promise<SignInOutput> logic from Amplify.
+     */
     async signInWithPassword(username: string, password: string) {
-        try {
-            return await signIn({ username, password });
-        } catch (error: any) {
-            // Implicit Dev Fallback
-            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured') || error.message?.includes('User pool client')) {
-                console.warn("Backend not configured. Logging in as Dev User.");
-                const mockUser: User = {
-                    id: 'dev-user-1',
-                    email: username,
-                    name: 'Dev Admin',
-                    role: 'Admin',
-                    tenantId: 'dev-tenant-1',
-                    status: 'Active'
-                };
-                localStorage.setItem('vantage_dev_user', JSON.stringify(mockUser));
-                return { isSignedIn: true };
-            }
-            throw error;
-        }
+        return await signIn({ username, password });
     },
 
+    /**
+     * Signs up a new Organization Admin user.
+     * Generates a new tenantId for the organization.
+     * @param email Admin email
+     * @param password Admin password
+     * @param name Admin full name
+     * @param orgName Organization name
+     * @returns Promise<SignUpOutput>
+     */
     async signUp(email: string, password: string, name: string, orgName: string) {
-        try {
-            // orgName is meant to be saved to DB/tenant logic. 
-            // In Cognito, we can store tenantId as attribute.
-            // We generate a tenantId here.
-            const tenantId = crypto.randomUUID();
+        // orgName is meant to be saved to DB/tenant logic. 
+        // In Cognito, we can store tenantId as attribute.
+        // We generate a tenantId here.
+        const tenantId = crypto.randomUUID();
 
-            return await signUp({
-                username: email,
-                password,
-                options: {
-                    userAttributes: {
-                        email,
-                        name,
-                        'custom:role': 'Admin',
-                        'custom:tenant_id': tenantId,
-                        'custom:org_name': orgName // Store org name in attribute for simple retrieval
-                    }
+        return await signUp({
+            username: email,
+            password,
+            options: {
+                userAttributes: {
+                    email,
+                    name,
+                    'custom:role': 'Admin',
+                    'custom:tenant_id': tenantId,
+                    'custom:org_name': orgName // Store org name in attribute for simple retrieval
                 }
-            });
-        } catch (error: any) {
-            // Implicit Dev Fallback
-            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured') || error.message?.includes('User pool client')) {
-                console.warn("Backend not configured. Simulating Signup.");
-                return { isSignUpComplete: true };
             }
-            throw error;
-        }
+        });
     },
 
-    async signOut() {
-        try {
-            await signOut();
-        } catch (e) {
-            // Fallback
-            localStorage.removeItem('vantage_dev_user');
-        }
-        localStorage.removeItem('vantage_dev_user');
+    /**
+     * Signs out the current user.
+     */
+    async signOut(): Promise<void> {
+        await signOut();
     }
 };
