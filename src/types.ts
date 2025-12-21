@@ -13,11 +13,74 @@ export interface User {
     tenantId: string;
 }
 
+export type InitiativeStatus = 'active' | 'completed' | 'paused' | 'cancelled';
+export type HeartbeatCadence = 'weekly' | 'bi-weekly' | 'monthly';
+export type MetricDirection = 'increase' | 'decrease' | 'maintain';
+
+export interface ExpectedImpact {
+    metric: string;
+    direction: MetricDirection;
+    estimatedDelta: number;
+}
+
+export interface SupportedKeyResult {
+    krId: string;
+    expectedImpact: ExpectedImpact;
+}
+
 export interface Initiative {
     id: string;
     name: string;
     ownerId: string;
+    status: InitiativeStatus;
+    startDate: string;
+    targetEndDate: string;
+    heartbeatCadence: HeartbeatCadence;
+    supportedKeyResults: SupportedKeyResult[];
+    heartbeats: Heartbeat[];
     link?: string;
+}
+
+export type Trend = 'improving' | 'stable' | 'degrading';
+export type HealthSignal = 'green' | 'yellow' | 'red';
+export type EvidenceType = 'metric' | 'artifact';
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface LeadingIndicator {
+    name: string;
+    value: number;
+    previousValue: number;
+    trend: Trend;
+}
+
+export interface Evidence {
+    type: EvidenceType;
+    description: string;
+    sourceLink: string;
+}
+
+export interface Risk {
+    description: string;
+    severity: RiskSeverity;
+    mitigation: string;
+}
+
+export interface OwnerAttestation {
+    attestedBy: string;
+    attestedOn: string;
+}
+
+export interface Heartbeat {
+    id: string;
+    initiativeId: string;
+    periodStart: string;
+    periodEnd: string;
+    healthSignal: HealthSignal;
+    leadingIndicators: LeadingIndicator[];
+    evidence: Evidence[];
+    risks: Risk[];
+    confidenceToExpectedImpact: number;
+    ownerAttestation: OwnerAttestation;
 }
 
 export interface KeyResult {

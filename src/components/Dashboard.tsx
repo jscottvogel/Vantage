@@ -5,6 +5,8 @@ import { Button } from './ui/button';
 import { Plus, Filter, Users, LogOut } from 'lucide-react';
 import { CreateObjectiveDialog } from './CreateObjectiveDialog';
 import { TeamDialog } from './TeamDialog';
+import { ObjectiveDetailDialog } from './ObjectiveDetailDialog';
+import { InitiativeDetailDialog } from './InitiativeDetailDialog';
 
 export function Dashboard() {
     const objectives = useStore(state => state.objectives);
@@ -15,6 +17,10 @@ export function Dashboard() {
     // Modal State
     const [isCreateOpen, setCreateOpen] = useState(false);
     const [isTeamOpen, setTeamOpen] = useState(false);
+
+    // Drill Down State
+    const [selectedObjectiveId, setSelectedObjectiveId] = useState<string | null>(null);
+    const [selectedInitiative, setSelectedInitiative] = useState<{ objId: string, initId: string } | null>(null);
 
     // Initial onboarding empty state
     if (objectives.length === 0) {
@@ -68,13 +74,29 @@ export function Dashboard() {
                         key={obj.id}
                         objective={obj}
                         lastUpdate={updates[obj.id]}
-                        onDrillDown={(id) => console.log('Drill down to', id)}
+                        onDrillDown={(id) => setSelectedObjectiveId(id)}
                     />
                 ))}
             </main>
 
             {isCreateOpen && <CreateObjectiveDialog onClose={() => setCreateOpen(false)} />}
             {isTeamOpen && <TeamDialog onClose={() => setTeamOpen(false)} />}
+
+            {selectedObjectiveId && (
+                <ObjectiveDetailDialog
+                    objectiveId={selectedObjectiveId}
+                    onClose={() => setSelectedObjectiveId(null)}
+                    onSelectInitiative={(initId) => setSelectedInitiative({ objId: selectedObjectiveId, initId })}
+                />
+            )}
+
+            {selectedInitiative && (
+                <InitiativeDetailDialog
+                    objectiveId={selectedInitiative.objId}
+                    initiativeId={selectedInitiative.initId}
+                    onClose={() => setSelectedInitiative(null)}
+                />
+            )}
         </div>
     );
 }

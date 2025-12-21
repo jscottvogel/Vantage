@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus } from './types';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat } from './types';
 
 interface AppState {
     currentUser: User | null;
@@ -32,6 +32,7 @@ interface AppState {
     ) => void;
     updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
     addUpdate: (update: StatusUpdate) => void;
+    addHeartbeat: (objectiveId: string, initiativeId: string, heartbeat: Heartbeat) => void;
 }
 
 // Initial Mock Data
@@ -105,7 +106,13 @@ export const useStore = create<AppState>((set, get) => ({
                     id: crypto.randomUUID(),
                     initiatives: kr.initiatives.map(init => ({
                         ...init,
-                        id: crypto.randomUUID()
+                        id: crypto.randomUUID(),
+                        status: 'active',
+                        startDate: new Date().toISOString(),
+                        targetEndDate: targetDate, // Default to objective target
+                        heartbeatCadence: 'weekly',
+                        supportedKeyResults: [],
+                        heartbeats: []
                     }))
                 }))
             })),
@@ -126,5 +133,25 @@ export const useStore = create<AppState>((set, get) => ({
 
     addUpdate: (update) => set(state => ({
         updates: { ...state.updates, [update.objectiveId]: update }
+    })),
+
+    addHeartbeat: (objectiveId, initiativeId, heartbeat) => set(state => ({
+        objectives: state.objectives.map(obj =>
+            obj.id === objectiveId ? {
+                ...obj,
+                outcomes: obj.outcomes.map(out => ({
+                    ...out,
+                    keyResults: out.keyResults.map(kr => ({
+                        ...kr,
+                        initiatives: kr.initiatives.map(init =>
+                            init.id === initiativeId ? {
+                                ...init,
+                                heartbeats: [...init.heartbeats, heartbeat]
+                            } : init
+                        )
+                    }))
+                }))
+            } : obj
+        )
     })),
 }));
