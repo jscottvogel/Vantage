@@ -1,7 +1,7 @@
 import type { StrategicObjective, StatusUpdate, KeyResultHeartbeat, ConfidenceTrend } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Clock, Target, Briefcase, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Target, Briefcase, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
@@ -11,7 +11,7 @@ interface ObjectiveCardProps {
     onDrillDown: (id: string) => void;
 }
 
-export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveCardProps) {
+export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
     // Access users from store to resolve IDs
     const users = useStore(state => state.users);
 
@@ -148,7 +148,7 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                 <div className="flex-1" />
 
                 <div className="space-y-4 pt-2 border-t border-border">
-                    {/* Last Update Snippet */}
+                    {/* Last Update Snippet - HIDDEN FOR NOW
                     <div className="bg-muted/50 p-3 rounded-md text-sm">
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-muted-foreground flex items-center">
@@ -160,6 +160,7 @@ export function ObjectiveCard({ objective, lastUpdate, onDrillDown }: ObjectiveC
                             {lastUpdate?.narrative || "No update provided yet."}
                         </p>
                     </div>
+                    */}
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Target: {new Date(objective.targetDate).toLocaleDateString()}</span>
