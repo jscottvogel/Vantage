@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 
 export function LoginPage() {
     const [email, setEmail] = useState('');
-    const login = useStore(state => state.login);
+    const [password, setPassword] = useState('password123'); // Dev default
+    const { login, isLoading, authError } = useStore();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (email) {
-            login(email);
+            await login(email, password);
         }
     };
 
@@ -35,14 +36,22 @@ export function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Password (Dev Default: password123)</label>
+                                <input
+                                    type="password"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
                         </div>
-                        <Button type="submit" className="w-full">
-                            Continue with Email
+                        {authError && <p className="text-sm text-red-500">{authError}</p>}
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? 'Signing in...' : 'Sign In'}
                         </Button>
                         <p className="text-xs text-center text-muted-foreground mt-4">
                             By clicking continue, you agree to our Terms of Service.
-                            <br />
-                            (For demo: Enter any email to creating a new account)
                         </p>
                     </form>
                     <div className="mt-4 text-center text-sm">

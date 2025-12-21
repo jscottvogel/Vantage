@@ -31,7 +31,15 @@ export interface User {
 }
 
 export type InitiativeStatus = 'active' | 'completed' | 'paused' | 'cancelled';
-export type HeartbeatCadence = 'weekly' | 'bi-weekly' | 'monthly';
+export type Frequency = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly';
+
+export interface CadenceSchedule {
+    frequency: Frequency;
+    dueDay: string; // e.g., 'Friday'
+    dueTime: string; // e.g., '17:00'
+}
+
+export type HeartbeatCadence = CadenceSchedule; // Keep alias for now to minimize refactor noise, or replace usages. Let's redirect.
 export type MetricDirection = 'increase' | 'decrease' | 'maintain';
 
 export interface ExpectedImpact {
@@ -133,6 +141,9 @@ export interface KeyResult {
     id: string;
     description: string;
     ownerId: string; // References User.id
+    startDate: string;
+    targetDate: string;
+    heartbeatCadence: HeartbeatCadence;
     initiatives: Initiative[];
     heartbeats: KeyResultHeartbeat[];
 }
@@ -141,6 +152,9 @@ export interface Outcome {
     id: string;
     goal: string;
     benefit: string;
+    startDate: string;
+    targetDate: string;
+    heartbeatCadence: HeartbeatCadence;
     keyResults: KeyResult[];
 }
 

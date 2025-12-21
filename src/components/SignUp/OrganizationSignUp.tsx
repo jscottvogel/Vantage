@@ -5,22 +5,23 @@ import { Button } from '../ui/button';
 import { ArrowRight, Building2, ShieldCheck, Mail } from 'lucide-react';
 
 export function OrganizationSignUp() {
-    const signupOrganization = useStore(state => state.signupOrganization);
+    const { signupOrganization, isLoading, authError } = useStore();
     const [step, setStep] = useState<'org' | 'admin'>('org');
 
     const [orgName, setOrgName] = useState('');
     const [adminName, setAdminName] = useState('');
     const [adminEmail, setAdminEmail] = useState('');
+    const [password, setPassword] = useState('password123'); // Dev default
 
     const handleOrgSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (orgName.trim()) setStep('admin');
     };
 
-    const handleFinalSubmit = (e: React.FormEvent) => {
+    const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (adminName.trim() && adminEmail.trim()) {
-            signupOrganization(orgName, adminEmail, adminName);
+            await signupOrganization(orgName, adminEmail, adminName, password);
         }
     };
 
@@ -90,8 +91,21 @@ export function OrganizationSignUp() {
                                     />
                                 </div>
                             </div>
-                            <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim()}>
-                                Complete Setup
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Password</label>
+                                <input
+                                    type="password"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </div>
+
+                            {authError && <p className="text-sm text-red-500">{authError}</p>}
+
+                            <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || isLoading}>
+                                {isLoading ? 'Creating Account...' : 'Complete Setup'}
                             </Button>
                         </form>
                     )}

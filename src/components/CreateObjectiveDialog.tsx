@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { AlertTriangle, Plus, Trash2, Layers } from 'lucide-react';
+import type { CadenceSchedule } from '../types';
 
 interface CreateObjectiveDialogProps {
     onClose: () => void;
@@ -17,12 +18,18 @@ interface InitiativeForm {
 interface KeyResultForm {
     description: string;
     ownerId: string;
+    startDate: string;
+    targetDate: string;
+    heartbeatCadence: CadenceSchedule;
     initiatives: InitiativeForm[];
 }
 
 interface OutcomeForm {
     goal: string;
     benefit: string;
+    startDate: string;
+    targetDate: string;
+    heartbeatCadence: CadenceSchedule;
     keyResults: KeyResultForm[];
 }
 
@@ -33,7 +40,21 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
 
     // State is now a list of Outcomes
     const [outcomes, setOutcomes] = useState<OutcomeForm[]>([
-        { goal: '', benefit: '', keyResults: [{ description: '', ownerId: '', initiatives: [] }] }
+        {
+            goal: '',
+            benefit: '',
+            startDate: new Date().toISOString().split('T')[0],
+            targetDate: '',
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+            keyResults: [{
+                description: '',
+                ownerId: '',
+                startDate: new Date().toISOString().split('T')[0],
+                targetDate: '',
+                heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+                initiatives: []
+            }]
+        }
     ]);
 
     const currentUser = useStore(state => state.currentUser);
@@ -47,7 +68,21 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
 
     // Outcome Handlers
     const handleAddOutcome = () => {
-        setOutcomes([...outcomes, { goal: '', benefit: '', keyResults: [{ description: '', ownerId: '', initiatives: [] }] }]);
+        setOutcomes([...outcomes, {
+            goal: '',
+            benefit: '',
+            startDate: new Date().toISOString().split('T')[0],
+            targetDate: targetDate || '', // inherit objective target if set
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+            keyResults: [{
+                description: '',
+                ownerId: '',
+                startDate: new Date().toISOString().split('T')[0],
+                targetDate: targetDate || '',
+                heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+                initiatives: []
+            }]
+        }]);
     };
 
     const handleUpdateOutcome = (index: number, field: keyof OutcomeForm, value: any) => {
@@ -64,7 +99,14 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
     // KR Handlers (Nested in Outcome)
     const handleAddKR = (outcomeIndex: number) => {
         const newOutcomes = [...outcomes];
-        newOutcomes[outcomeIndex].keyResults.push({ description: '', ownerId: '', initiatives: [] });
+        newOutcomes[outcomeIndex].keyResults.push({
+            description: '',
+            ownerId: '',
+            startDate: new Date().toISOString().split('T')[0],
+            targetDate: targetDate || '',
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+            initiatives: []
+        });
         setOutcomes(newOutcomes);
     };
 
@@ -102,6 +144,29 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
     const handleRemoveInitiative = (outcomeIndex: number, krIndex: number, initIndex: number) => {
         const newOutcomes = [...outcomes];
         newOutcomes[outcomeIndex].keyResults[krIndex].initiatives = newOutcomes[outcomeIndex].keyResults[krIndex].initiatives.filter((_, i) => i !== initIndex);
+        setOutcomes(newOutcomes);
+    };
+
+    const updateSchedule = (
+        outcomeIndex: number,
+        krIndex: number | null,
+        field: keyof CadenceSchedule,
+        value: string
+    ) => {
+        const newOutcomes = [...outcomes];
+        if (krIndex === null) {
+            // Update Outcome
+            newOutcomes[outcomeIndex].heartbeatCadence = {
+                ...newOutcomes[outcomeIndex].heartbeatCadence,
+                [field]: value
+            };
+        } else {
+            // Update KR
+            newOutcomes[outcomeIndex].keyResults[krIndex].heartbeatCadence = {
+                ...newOutcomes[outcomeIndex].keyResults[krIndex].heartbeatCadence,
+                [field]: value
+            };
+        }
         setOutcomes(newOutcomes);
     };
 
@@ -218,6 +283,61 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 />
                                             </div>
                                         </div>
+                                        <div className="grid grid-cols-3 gap-4 mb-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                    value={outcome.startDate}
+                                                    onChange={e => handleUpdateOutcome(oIndex, 'startDate', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Date</label>
+                                                <input
+                                                    type="date"
+                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                    value={outcome.targetDate}
+                                                    onChange={e => handleUpdateOutcome(oIndex, 'targetDate', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2 col-span-3">
+                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Heartbeat Schedule</label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                        value={outcome.heartbeatCadence.frequency}
+                                                        onChange={e => updateSchedule(oIndex, null, 'frequency', e.target.value)}
+                                                    >
+                                                        <option value="daily">Daily</option>
+                                                        <option value="weekly">Weekly</option>
+                                                        <option value="bi-weekly">Bi-Weekly</option>
+                                                        <option value="monthly">Monthly</option>
+                                                        <option value="quarterly">Quarterly</option>
+                                                    </select>
+                                                    <select
+                                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                        value={outcome.heartbeatCadence.dueDay}
+                                                        onChange={e => updateSchedule(oIndex, null, 'dueDay', e.target.value)}
+                                                    >
+                                                        <option value="Monday">Mon</option>
+                                                        <option value="Tuesday">Tue</option>
+                                                        <option value="Wednesday">Wed</option>
+                                                        <option value="Thursday">Thu</option>
+                                                        <option value="Friday">Fri</option>
+                                                        <option value="Saturday">Sat</option>
+                                                        <option value="Sunday">Sun</option>
+                                                    </select>
+                                                    <input
+                                                        type="time"
+                                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                        value={outcome.heartbeatCadence.dueTime}
+                                                        onChange={e => updateSchedule(oIndex, null, 'dueTime', e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         {/* Key Results Section (Nested) */}
                                         <div className="bg-muted/30 p-4 rounded-md space-y-4">
@@ -231,8 +351,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             {outcome.keyResults.map((kr, kIndex) => (
                                                 <div key={kIndex} className="bg-background border rounded-md p-3 shadow-sm">
                                                     {/* KR Inputs */}
-                                                    <div className="flex gap-3 mb-2 items-start">
-                                                        <div className="flex-1 space-y-1">
+                                                    <div className="grid grid-cols-12 gap-3 mb-2 items-start">
+                                                        <div className="col-span-3 space-y-1">
                                                             <input
                                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-medium"
                                                                 placeholder="Key Result Description"
@@ -241,7 +361,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                                 required={oIndex === 0 && kIndex === 0}
                                                             />
                                                         </div>
-                                                        <div className="w-1/3">
+                                                        <div className="col-span-2">
                                                             <select
                                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm appearance-none"
                                                                 value={kr.ownerId}
@@ -253,11 +373,59 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                                 ))}
                                                             </select>
                                                         </div>
-                                                        {outcome.keyResults.length > 1 && (
-                                                            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveKR(oIndex, kIndex)}>
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                        )}
+                                                        <div className="col-span-2">
+                                                            <input
+                                                                type="date"
+                                                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                                                value={kr.targetDate}
+                                                                title="Target Date"
+                                                                onChange={e => handleUpdateKR(oIndex, kIndex, 'targetDate', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-5">
+                                                            <div className="flex gap-1">
+                                                                <select
+                                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                                    value={kr.heartbeatCadence.frequency}
+                                                                    onChange={e => updateSchedule(oIndex, kIndex, 'frequency', e.target.value)}
+                                                                    title="Frequency"
+                                                                >
+                                                                    <option value="daily">Daily</option>
+                                                                    <option value="weekly">Weekly</option>
+                                                                    <option value="bi-weekly">Bi-Weekly</option>
+                                                                    <option value="monthly">Monthly</option>
+                                                                    <option value="quarterly">Quarterly</option>
+                                                                </select>
+                                                                <select
+                                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                                                    value={kr.heartbeatCadence.dueDay}
+                                                                    onChange={e => updateSchedule(oIndex, kIndex, 'dueDay', e.target.value)}
+                                                                    title="Day"
+                                                                >
+                                                                    <option value="Monday">Mon</option>
+                                                                    <option value="Tuesday">Tue</option>
+                                                                    <option value="Wednesday">Wed</option>
+                                                                    <option value="Thursday">Thu</option>
+                                                                    <option value="Friday">Fri</option>
+                                                                    <option value="Saturday">Sat</option>
+                                                                    <option value="Sunday">Sun</option>
+                                                                </select>
+                                                                <input
+                                                                    type="time"
+                                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-1 py-1 text-xs"
+                                                                    value={kr.heartbeatCadence.dueTime}
+                                                                    onChange={e => updateSchedule(oIndex, kIndex, 'dueTime', e.target.value)}
+                                                                    title="Time"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-span-2 flex justify-end">
+                                                            {outcome.keyResults.length > 1 && (
+                                                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveKR(oIndex, kIndex)}>
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </div>
 
                                                     {/* Initiatives (Doubly Nested) */}

@@ -4,7 +4,12 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
 import { X, HeartPulse, Plus, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import type { Heartbeat, Initiative, LeadingIndicator, Evidence, Risk } from '../types';
+import type { Heartbeat, Initiative, LeadingIndicator, Evidence, Risk, CadenceSchedule } from '../types';
+
+const formatCadence = (schedule: CadenceSchedule | string) => {
+    if (typeof schedule === 'string') return schedule;
+    return `${schedule.frequency.charAt(0).toUpperCase() + schedule.frequency.slice(1)} on ${schedule.dueDay}s`;
+}
 
 interface InitiativeDetailDialogProps {
     objectiveId: string;
@@ -133,7 +138,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                     </CardTitle>
                     <CardDescription className="flex gap-4">
                         <span>Has {initiative.supportedKeyResults.length} supported KRs</span>
-                        <span>Cadence: {initiative.heartbeatCadence}</span>
+                        <span>Cadence: {formatCadence(initiative.heartbeatCadence)}</span>
                     </CardDescription>
                 </CardHeader>
 

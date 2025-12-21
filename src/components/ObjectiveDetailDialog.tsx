@@ -5,7 +5,13 @@ import { Badge } from './ui/badge';
 import { X, Target, Briefcase, Layers, ArrowRight, Activity, TrendingUp, TrendingDown, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { KeyResultHeartbeatDialog } from './KeyResultHeartbeatDialog';
-import type { KeyResultHeartbeat, Initiative, KeyResult } from '../types';
+import { NotificationService } from '../services/notification';
+import type { KeyResultHeartbeat, Initiative, KeyResult, CadenceSchedule } from '../types';
+
+const formatCadence = (schedule: CadenceSchedule | string) => {
+    if (typeof schedule === 'string') return schedule;
+    return `${schedule.frequency.charAt(0).toUpperCase() + schedule.frequency.slice(1)} on ${schedule.dueDay}s`;
+}
 
 interface ObjectiveDetailDialogProps {
     objectiveId: string;
@@ -41,6 +47,9 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
             id: crypto.randomUUID(),
             description: newKRDescription,
             ownerId: newKROwnerId,
+            startDate: new Date().toISOString(),
+            targetDate: objective.targetDate,
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
             initiatives: [],
             heartbeats: []
         };
@@ -64,6 +73,31 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
             ownerId: editKROwnerId
         });
         setEditingKR(null);
+    };
+
+    const handleNotifyOwner = async (type: 'kr' | 'initiative', id: string, name: string, ownerEmail: string) => {
+        const link = `${window.location.origin}/heartbeat/${type}/${id}`;
+
+        // Use real service
+        // Note: ownerEmail is just an ID in standard User object right now, we need to find the User object to get the email if possible
+        // But for now we will assume the ID *might* be an email or we simulated it.
+        // Let's lookup the user from store.
+        const user = store.users.find(u => u.id === ownerEmail);
+        const email = user?.email || ownerEmail; // Fallback if ownerId is the email
+
+        if (!email.includes('@')) {
+            alert(`Cannot notify: Invalid email for owner '${ownerEmail}'`);
+            return;
+        }
+
+        const result = await NotificationService.sendHeartbeatNotification(email, link, name);
+
+        if (result.success) {
+            alert(`Notification sent to ${email}!`);
+        } else {
+            console.error(result.error);
+            alert('Failed to send notification. detailed error in console.');
+        }
     };
 
     const handleDeleteKeyResult = (outcomeId: string, krId: string) => {
@@ -96,7 +130,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
             status: 'active',
             startDate: new Date().toISOString(),
             targetEndDate: objective.targetDate,
-            heartbeatCadence: 'weekly',
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
             supportedKeyResults: [],
             heartbeats: []
         };
@@ -140,8 +174,13 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                     </Button>
                                 )}
                             </div>
-                            <div className="pl-6 text-sm text-muted-foreground mb-2">
-                                Benefit: {outcome.benefit}
+                            <div className="pl-6 text-sm text-muted-foreground mb-2 flex flex-col gap-1">
+                                <div>Benefit: {outcome.benefit}</div>
+                                <div className="text-xs space-x-3">
+                                    <span>Start: {new Date(outcome.startDate).toLocaleDateString()}</span>
+                                    <span>Target: {new Date(outcome.targetDate).toLocaleDateString()}</span>
+                                    <Badge variant="outline" className="text-[10px] h-4">{formatCadence(outcome.heartbeatCadence)}</Badge>
+                                </div>
                             </div>
 
                             {/* Add KR Form */}
@@ -218,7 +257,19 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                                     </Button>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-xs text-muted-foreground">Owner: {store.users.find(u => u.id === kr.ownerId)?.name || kr.ownerId}</div>
+                                                            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-3">
+                                                                <span>Owner: {store.users.find(u => u.id === kr.ownerId)?.name || kr.ownerId}</span>
+                                                                <span>Target: {new Date(kr.targetDate).toLocaleDateString()}</span>
+                                                                <Badge variant="outline" className="text-[10px] h-4">{formatCadence(kr.heartbeatCadence)}</Badge>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="h-5 text-[10px] px-1 text-blue-600 hover:text-blue-800"
+                                                                    onClick={() => handleNotifyOwner('kr', kr.id, kr.description, kr.ownerId)}
+                                                                >
+                                                                    Notify Owner
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -305,7 +356,20 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                             >
                                                                 <div className="space-y-1">
                                                                     <div className="font-medium text-sm pr-6">{init.name}</div>
-                                                                    <div className="text-[10px] text-muted-foreground">Owner: {store.users.find(u => u.id === init.ownerId)?.name || init.ownerId}</div>
+                                                                    <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                                                        <span>Owner: {store.users.find(u => u.id === init.ownerId)?.name || init.ownerId}</span>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            className="h-4 p-0 text-[10px] text-blue-600 hover:text-blue-800"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleNotifyOwner('initiative', init.id, init.name, init.ownerId);
+                                                                            }}
+                                                                        >
+                                                                            Notify Owner
+                                                                        </Button>
+                                                                    </div>
                                                                     <div className="flex gap-2">
                                                                         <Badge variant="outline" className="text-[10px] h-5">{init.status}</Badge>
                                                                         {init.heartbeats.length > 0 && (

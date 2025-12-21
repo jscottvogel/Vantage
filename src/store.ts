@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult, Organization } from './types';
+import { AuthService } from './services/auth';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult, Organization, HeartbeatCadence } from './types';
 
 interface AppState {
     currentUser: User | null;
@@ -11,13 +12,16 @@ interface AppState {
     // Plan Limits
     planName: 'Free' | 'Pro'; // Derived from currentOrganization usually, kept for compat or simple ref
     maxActiveObjectives: number;
+    isLoading: boolean;
+    authError: string | null;
 
     // Actions
-    login: (email: string) => void;
-    logout: () => void;
+    checkSession: () => Promise<void>;
+    login: (email: string, password?: string) => Promise<void>;
+    logout: () => Promise<void>;
 
     // Org & User Management
-    signupOrganization: (orgName: string, adminEmail: string, adminName: string) => void;
+    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<void>;
     updateOrganization: (updates: Partial<Organization>) => void;
 
     inviteUser: (email: string, role: 'Admin' | 'Member') => void;
@@ -32,9 +36,15 @@ interface AppState {
         outcomes: {
             goal: string;
             benefit: string;
+            startDate: string;
+            targetDate: string;
+            heartbeatCadence: HeartbeatCadence;
             keyResults: {
                 description: string;
                 ownerId: string;
+                startDate: string;
+                targetDate: string;
+                heartbeatCadence: HeartbeatCadence;
                 initiatives: { name: string; ownerId: string; link?: string }[];
             }[];
         }[]
@@ -67,7 +77,7 @@ const INITIAL_USERS: User[] = [
     { id: '3', name: 'Mike T.', email: 'mike@vantage.inc', role: 'Member', tenantId: 't1', status: 'Active' },
 ];
 
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>((set) => ({
     currentUser: null, // Start logged out
     currentOrganization: MOCK_ORG,
     users: INITIAL_USERS,
@@ -75,59 +85,67 @@ export const useStore = create<AppState>((set, get) => ({
     updates: {},
     planName: 'Free',
     maxActiveObjectives: 2,
+    isLoading: true,
+    authError: null,
 
-    login: (email: string) => {
-        // Mock login - just find user
-        const existing = get().users.find(u => u.email === email);
-        if (existing) {
-            set({ currentUser: existing, currentOrganization: MOCK_ORG });
-        } else {
-            // Fallback for demo: auto-create a user if not found, but ideally this is blocked
-            console.warn("User not found, auto-creating for demo");
-            const newUser: User = {
-                id: crypto.randomUUID(),
-                name: email.split('@')[0],
-                email,
-                role: 'Admin',
-                tenantId: 't1',
-                status: 'Active'
-            };
-            set(state => ({
-                currentUser: newUser,
-                users: [...state.users, newUser],
-                currentOrganization: MOCK_ORG
-            }));
+    checkSession: async () => {
+        try {
+            const user = await AuthService.getCurrentUser();
+            set({ currentUser: user, isLoading: false });
+        } catch (e) {
+            set({ currentUser: null, isLoading: false });
         }
     },
 
-    logout: () => set({ currentUser: null }),
+    login: async (email: string, password = 'password123') => {
+        set({ isLoading: true, authError: null });
+        try {
+            await AuthService.signInWithPassword(email, password);
+            const user = await AuthService.getCurrentUser();
+            set({ currentUser: user, isLoading: false });
+        } catch (e: any) {
+            console.error("Login failed:", e);
+            set({ isLoading: false, authError: e.message || "Login failed" });
+        }
+    },
 
-    signupOrganization: (orgName, adminEmail, adminName) => {
-        const newOrgId = crypto.randomUUID();
-        const newOrg: Organization = {
-            id: newOrgId,
-            name: orgName,
-            subscriptionTier: 'Free',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
+    logout: async () => {
+        set({ isLoading: true });
+        await AuthService.signOut();
+        set({ currentUser: null, isLoading: false });
+    },
 
-        const newAdmin: User = {
-            id: crypto.randomUUID(),
-            name: adminName,
-            email: adminEmail,
-            role: 'Admin',
-            tenantId: newOrgId,
-            status: 'Active'
-        };
+    signupOrganization: async (orgName, adminEmail, adminName, password = 'password123') => {
+        set({ isLoading: true, authError: null });
+        try {
+            await AuthService.signUp(adminEmail, password, adminName, orgName);
 
-        set({
-            currentOrganization: newOrg,
-            currentUser: newAdmin,
-            users: [newAdmin],
-            objectives: [], // Clean slate
-            planName: 'Free'
-        });
+            // Try to login to see if confirmed
+            try {
+                await AuthService.signInWithPassword(adminEmail, password);
+                const user = await AuthService.getCurrentUser();
+
+                // create org in local state too? 
+                const newOrg: Organization = {
+                    id: user?.tenantId || crypto.randomUUID(),
+                    name: orgName,
+                    subscriptionTier: 'Free',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                set({
+                    currentUser: user,
+                    currentOrganization: newOrg,
+                    isLoading: false
+                });
+            } catch (signInErr) {
+                set({ isLoading: false, authError: "Account created but verify required (check email)." });
+            }
+
+        } catch (e: any) {
+            set({ isLoading: false, authError: e.message || "Signup failed" });
+        }
     },
 
     updateOrganization: (updates) => set(state => state.currentOrganization ? ({
@@ -172,9 +190,15 @@ export const useStore = create<AppState>((set, get) => ({
                 id: crypto.randomUUID(),
                 goal: out.goal,
                 benefit: out.benefit,
+                startDate: out.startDate,
+                targetDate: out.targetDate,
+                heartbeatCadence: out.heartbeatCadence,
                 keyResults: out.keyResults.map(kr => ({
                     ...kr,
                     id: crypto.randomUUID(),
+                    startDate: kr.startDate,
+                    targetDate: kr.targetDate,
+                    heartbeatCadence: kr.heartbeatCadence,
                     heartbeats: [], // Init empty heartbeats
                     initiatives: kr.initiatives.map(init => ({
                         ...init,
@@ -182,7 +206,7 @@ export const useStore = create<AppState>((set, get) => ({
                         status: 'active',
                         startDate: new Date().toISOString(),
                         targetEndDate: targetDate, // Default to objective target
-                        heartbeatCadence: 'weekly',
+                        heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
                         supportedKeyResults: [],
                         heartbeats: []
                     }))
