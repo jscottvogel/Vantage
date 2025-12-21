@@ -16,8 +16,12 @@ export const AuthService = {
                 tenantId: attributes['custom:tenant_id'] || '',
                 status: 'Active'
             };
-        } catch (error) {
-            // No current user
+        } catch (error: any) {
+            // Implicit Dev Fallback: If Amplify is not configured (or dummy config), allow dev login
+            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured')) {
+                const stored = localStorage.getItem('vantage_dev_user');
+                return stored ? JSON.parse(stored) : null;
+            }
             return null;
         }
     },
@@ -27,31 +31,64 @@ export const AuthService = {
     },
 
     async signInWithPassword(username: string, password: string) {
-        return await signIn({ username, password });
+        try {
+            return await signIn({ username, password });
+        } catch (error: any) {
+            // Implicit Dev Fallback
+            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured') || error.message?.includes('User pool client')) {
+                console.warn("Backend not configured. Logging in as Dev User.");
+                const mockUser: User = {
+                    id: 'dev-user-1',
+                    email: username,
+                    name: 'Dev Admin',
+                    role: 'Admin',
+                    tenantId: 'dev-tenant-1',
+                    status: 'Active'
+                };
+                localStorage.setItem('vantage_dev_user', JSON.stringify(mockUser));
+                return { isSignedIn: true };
+            }
+            throw error;
+        }
     },
 
     async signUp(email: string, password: string, name: string, orgName: string) {
-        // orgName is meant to be saved to DB/tenant logic. 
-        // In Cognito, we can store tenantId as attribute.
-        // We generate a tenantId here.
-        const tenantId = crypto.randomUUID();
+        try {
+            // orgName is meant to be saved to DB/tenant logic. 
+            // In Cognito, we can store tenantId as attribute.
+            // We generate a tenantId here.
+            const tenantId = crypto.randomUUID();
 
-        return await signUp({
-            username: email,
-            password,
-            options: {
-                userAttributes: {
-                    email,
-                    name,
-                    'custom:role': 'Admin',
-                    'custom:tenant_id': tenantId,
-                    'custom:org_name': orgName // Store org name in attribute for simple retrieval
+            return await signUp({
+                username: email,
+                password,
+                options: {
+                    userAttributes: {
+                        email,
+                        name,
+                        'custom:role': 'Admin',
+                        'custom:tenant_id': tenantId,
+                        'custom:org_name': orgName // Store org name in attribute for simple retrieval
+                    }
                 }
+            });
+        } catch (error: any) {
+            // Implicit Dev Fallback
+            if (error.name === 'NotConfiguredException' || error.message?.includes('not been configured') || error.message?.includes('User pool client')) {
+                console.warn("Backend not configured. Simulating Signup.");
+                return { isSignUpComplete: true };
             }
-        });
+            throw error;
+        }
     },
 
     async signOut() {
-        await signOut();
+        try {
+            await signOut();
+        } catch (e) {
+            // Fallback
+            localStorage.removeItem('vantage_dev_user');
+        }
+        localStorage.removeItem('vantage_dev_user');
     }
 };
