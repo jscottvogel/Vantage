@@ -23,19 +23,6 @@ export const AuthService = {
     },
 
     async signIn(_email: string) {
-        // For this demo (passwordless/magic-link implies challenges), 
-        // but sticking to standard password flow for now as "email" was the prompt input.
-        // Assuming we need a password, but the UX only asked for email.
-        // I will trigger a sign-in, but this might need a password or OTP flow.
-        // For the purpose of "Hooking up", I'll implement standard signIn.
-        // If the user meant "Passwordless", that requires specific backend config.
-        // I will assume standard auth for now and update the UI to ask for password if needed.
-        // WAIT: The prompt said "We have to have the email address for users".
-        // Let's implement signIn with a hardcoded dev password or prompt.
-        // Actually, let's update the UI to ask for password later.
-
-        // REVISE: I'll accept just email here but returning the result might prompt next step.
-        // Use a default password for the "Auto-Signup" demo feel or expect password in UI?
         throw new Error("UI needs to collect password");
     },
 

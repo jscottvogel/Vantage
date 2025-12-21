@@ -6,6 +6,8 @@ import './index.css'
 import App from './App.tsx'
 
 // Try to load Amplify config, fail gracefully if not found (for dev without AWS)
+// Try to load Amplify config, fail gracefully if not found (for dev without AWS)
+// Try to load Amplify config, fail gracefully if not found (for dev without AWS)
 try {
   // @ts-ignore - Validating existence
   const outputs = await import('../amplify_outputs.json');
