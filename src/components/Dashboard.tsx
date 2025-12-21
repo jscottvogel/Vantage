@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
+import { Link } from 'react-router-dom';
 import { ObjectiveCard } from './ObjectiveCard';
 import { Button } from './ui/button';
-import { Plus, Filter, Users, LogOut } from 'lucide-react';
+import { Plus, Filter, Users, LogOut, Settings } from 'lucide-react';
 import { CreateObjectiveDialog } from './CreateObjectiveDialog';
 import { TeamDialog } from './TeamDialog';
 import { ObjectiveDetailDialog } from './ObjectiveDetailDialog';
@@ -57,6 +58,12 @@ export function Dashboard() {
                         <Users className="w-4 h-4 mr-2" />
                         Team
                     </Button>
+                    <Link to="/admin">
+                        <Button variant="outline" size="sm">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Settings
+                        </Button>
+                    </Link>
                     <Button variant="outline" size="sm">
                         <Filter className="w-4 h-4 mr-2" />
                         Filter

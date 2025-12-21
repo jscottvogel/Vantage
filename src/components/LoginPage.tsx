@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -44,6 +45,10 @@ export function LoginPage() {
                             (For demo: Enter any email to creating a new account)
                         </p>
                     </form>
+                    <div className="mt-4 text-center text-sm">
+                        <span className="text-muted-foreground">Detailed logic pending? </span>
+                        <Link to="/signup" className="text-primary hover:underline font-medium">Create New Organization</Link>
+                    </div>
                 </CardContent>
             </Card>
         </div>

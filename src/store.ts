@@ -1,20 +1,29 @@
 import { create } from 'zustand';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult } from './types';
+import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult, Organization } from './types';
 
 interface AppState {
     currentUser: User | null;
+    currentOrganization: Organization | null;
     users: User[];
     objectives: StrategicObjective[];
     updates: Record<string, StatusUpdate>; // keyed by objectiveId
 
     // Plan Limits
-    planName: 'Free' | 'Pro';
+    planName: 'Free' | 'Pro'; // Derived from currentOrganization usually, kept for compat or simple ref
     maxActiveObjectives: number;
 
     // Actions
     login: (email: string) => void;
     logout: () => void;
-    addUser: (email: string, role: 'Admin' | 'Member') => void;
+
+    // Org & User Management
+    signupOrganization: (orgName: string, adminEmail: string, adminName: string) => void;
+    updateOrganization: (updates: Partial<Organization>) => void;
+
+    inviteUser: (email: string, role: 'Admin' | 'Member') => void;
+    updateUserRole: (userId: string, role: 'Admin' | 'Member') => void;
+    removeUser: (userId: string) => void;
+
     createObjective: (
         name: string,
         ownerId: string,
@@ -44,14 +53,23 @@ interface AppState {
 }
 
 // Initial Mock Data
+const MOCK_ORG: Organization = {
+    id: 't1',
+    name: 'Vantage Inc.',
+    subscriptionTier: 'Free',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+};
+
 const INITIAL_USERS: User[] = [
-    { id: '1', name: 'Admin User', email: 'admin@vantage.inc', role: 'Admin', tenantId: 't1' },
-    { id: '2', name: 'Sarah J.', email: 'sarah@vantage.inc', role: 'Member', tenantId: 't1' },
-    { id: '3', name: 'Mike T.', email: 'mike@vantage.inc', role: 'Member', tenantId: 't1' },
+    { id: '1', name: 'Admin User', email: 'admin@vantage.inc', role: 'Admin', tenantId: 't1', status: 'Active' },
+    { id: '2', name: 'Sarah J.', email: 'sarah@vantage.inc', role: 'Member', tenantId: 't1', status: 'Active' },
+    { id: '3', name: 'Mike T.', email: 'mike@vantage.inc', role: 'Member', tenantId: 't1', status: 'Active' },
 ];
 
 export const useStore = create<AppState>((set, get) => ({
-    currentUser: null, // Start logged out to show signup flow
+    currentUser: null, // Start logged out
+    currentOrganization: MOCK_ORG,
     users: INITIAL_USERS,
     objectives: [],
     updates: {},
@@ -59,36 +77,81 @@ export const useStore = create<AppState>((set, get) => ({
     maxActiveObjectives: 2,
 
     login: (email: string) => {
-        // Mock login - just find user or create admin if first time
+        // Mock login - just find user
         const existing = get().users.find(u => u.email === email);
         if (existing) {
-            set({ currentUser: existing });
+            set({ currentUser: existing, currentOrganization: MOCK_ORG });
         } else {
-            // Auto-signup flow
+            // Fallback for demo: auto-create a user if not found, but ideally this is blocked
+            console.warn("User not found, auto-creating for demo");
             const newUser: User = {
                 id: crypto.randomUUID(),
                 name: email.split('@')[0],
                 email,
                 role: 'Admin',
-                tenantId: 't1'
+                tenantId: 't1',
+                status: 'Active'
             };
             set(state => ({
                 currentUser: newUser,
-                users: [...state.users, newUser]
+                users: [...state.users, newUser],
+                currentOrganization: MOCK_ORG
             }));
         }
     },
 
     logout: () => set({ currentUser: null }),
 
-    addUser: (email, role) => set(state => ({
+    signupOrganization: (orgName, adminEmail, adminName) => {
+        const newOrgId = crypto.randomUUID();
+        const newOrg: Organization = {
+            id: newOrgId,
+            name: orgName,
+            subscriptionTier: 'Free',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const newAdmin: User = {
+            id: crypto.randomUUID(),
+            name: adminName,
+            email: adminEmail,
+            role: 'Admin',
+            tenantId: newOrgId,
+            status: 'Active'
+        };
+
+        set({
+            currentOrganization: newOrg,
+            currentUser: newAdmin,
+            users: [newAdmin],
+            objectives: [], // Clean slate
+            planName: 'Free'
+        });
+    },
+
+    updateOrganization: (updates) => set(state => state.currentOrganization ? ({
+        currentOrganization: { ...state.currentOrganization, ...updates },
+        planName: updates.subscriptionTier === 'Pro' ? 'Pro' : state.planName // Sync plan name if tier changes
+    }) : {}),
+
+    inviteUser: (email, role) => set(state => ({
         users: [...state.users, {
             id: crypto.randomUUID(),
-            name: email.split('@')[0],
+            name: email.split('@')[0] || 'Invited User',
             email,
             role,
-            tenantId: state.currentUser?.tenantId || 't1'
+            tenantId: state.currentOrganization?.id || 't1',
+            status: 'Invited'
         }]
+    })),
+
+    updateUserRole: (userId, role) => set(state => ({
+        users: state.users.map(u => u.id === userId ? { ...u, role } : u)
+    })),
+
+    removeUser: (userId) => set(state => ({
+        users: state.users.filter(u => u.id !== userId)
     })),
 
     createObjective: (name, ownerId, strategicValue, targetDate, outcomes) => set(state => {

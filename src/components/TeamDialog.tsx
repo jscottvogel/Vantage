@@ -10,13 +10,13 @@ interface TeamDialogProps {
 
 export function TeamDialog({ onClose }: TeamDialogProps) {
     const users = useStore(state => state.users);
-    const addUser = useStore(state => state.addUser);
+    const inviteUser = useStore(state => state.inviteUser);
     const [email, setEmail] = useState('');
 
     const handleInvite = (e: React.FormEvent) => {
         e.preventDefault();
         if (email) {
-            addUser(email, 'Member');
+            inviteUser(email, 'Member');
             setEmail('');
         }
     };

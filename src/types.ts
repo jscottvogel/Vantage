@@ -5,12 +5,29 @@ export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
 export type SignalType = 'Sentiment' | 'Cadence' | 'Ambiguity' | 'Consistency';
 export type RiskLevel = 'Critical' | 'High' | 'Medium' | 'Low' | 'Stable';
 
+export type SubscriptionTier = 'Free' | 'Pro' | 'Enterprise';
+
+export interface Organization {
+    id: string;
+    name: string;
+    domain?: string;
+    subscriptionTier: SubscriptionTier;
+    ssoSettings?: {
+        provider: string; // e.g., 'Okta', 'AzureAD'
+        metadataUrl: string;
+        enabled: boolean;
+    };
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface User {
     id: string;
     name: string;
     email: string;
     role: 'Admin' | 'Member';
     tenantId: string;
+    status: 'Active' | 'Invited' | 'Disabled';
 }
 
 export type InitiativeStatus = 'active' | 'completed' | 'paused' | 'cancelled';
