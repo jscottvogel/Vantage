@@ -1,0 +1,3 @@
+type Mutation {
+  sendHeartbeatNotification(recipientEmail: String!, link: String!, subject: String!, messageBody: String!): String @function(name: "FnSendHeartbeatNotification") @auth(rules: [{allow: private}])
+}

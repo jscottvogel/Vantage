@@ -62,7 +62,7 @@ export function OrganizationSignUp() {
                                     <p className="text-sm font-medium">{orgName}</p>
                                     <p className="text-xs text-muted-foreground">Organization</p>
                                 </div>
-                                <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => setStep('org')}>Change</Button>
+                                <Button variant="ghost" size="sm" type="button" className="ml-auto h-6 text-xs" onClick={() => setStep('org')}>Change</Button>
                             </div>
 
                             <div className="space-y-2">
@@ -75,6 +75,7 @@ export function OrganizationSignUp() {
                                         placeholder="Full Name"
                                         value={adminName}
                                         onChange={e => setAdminName(e.target.value)}
+                                        required
                                     />
                                 </div>
                             </div>
@@ -88,6 +89,7 @@ export function OrganizationSignUp() {
                                         placeholder="name@company.com"
                                         value={adminEmail}
                                         onChange={e => setAdminEmail(e.target.value)}
+                                        required
                                     />
                                 </div>
                             </div>
@@ -99,10 +101,16 @@ export function OrganizationSignUp() {
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
+                                    required
+                                    minLength={8}
                                 />
                             </div>
 
-                            {authError && <p className="text-sm text-red-500">{authError}</p>}
+                            {authError && (
+                                <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm font-medium border border-destructive/20">
+                                    {authError}
+                                </div>
+                            )}
 
                             <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || isLoading}>
                                 {isLoading ? 'Creating Account...' : 'Complete Setup'}

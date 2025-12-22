@@ -1,0 +1,530 @@
+{
+ "Description": "An auto-generated nested stack for the @function directive.",
+ "AWSTemplateFormatVersion": "2010-09-09",
+ "Conditions": {
+  "HasEnvironmentParameter": {
+   "Fn::Not": [
+    {
+     "Fn::Equals": [
+      "NONE",
+      "NONE"
+     ]
+    }
+   ]
+  },
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Resources": {
+  "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleAB85CAE1": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "appsync.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "amplifyData"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/ServiceRole/Resource"
+   }
+  },
+  "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleDefaultPolicyBE832926": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleDefaultPolicyBE832926",
+    "Roles": [
+     {
+      "Ref": "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleAB85CAE1"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "FnSendHeartbeatNotificationLambdaDataSource": {
+   "Type": "AWS::AppSync::DataSource",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId"
+    },
+    "LambdaConfig": {
+     "LambdaFunctionArn": {
+      "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+     }
+    },
+    "Name": "FnSendHeartbeatNotificationLambdaDataSource",
+    "ServiceRoleArn": {
+     "Fn::GetAtt": [
+      "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleAB85CAE1",
+      "Arn"
+     ]
+    },
+    "Type": "AWS_LAMBDA"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/Resource"
+   }
+  },
+  "InvokeFnSendHeartbeatNotificationLambdaDataSourceInvokeFnSendHeartbeatNotificationLambdaDataSourceAppSyncFunctionF45C19CC": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "FnSendHeartbeatNotificationLambdaDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "InvokeFnSendHeartbeatNotificationLambdaDataSource",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e57fd2f49ce7675e8950df813cad3752a0e745bf7969ccd0c14efff8ac7582f4.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/a20e304512b1fde77dc16ed9d5e0ed03817afcab629ce87ef11c99877b7b1e30.vtl"
+    }
+   },
+   "DependsOn": [
+    "FnSendHeartbeatNotificationLambdaDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/InvokeFnSendHeartbeatNotificationLambdaDataSource/InvokeFnSendHeartbeatNotificationLambdaDataSource.AppSyncFunction"
+   }
+  },
+  "MutationsendHeartbeatNotificationResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId"
+    },
+    "FieldName": "sendHeartbeatNotification",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MutationSendHeartbeatNotificationAuthFNMutationSendHeartbeatNotificationAuthFNAppSyncFunction24B4095C",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "InvokeFnSendHeartbeatNotificationLambdaDataSourceInvokeFnSendHeartbeatNotificationLambdaDataSourceAppSyncFunctionF45C19CC",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "## [Start] Stash resolver specific context.. **\n$util.qr($ctx.stash.put(\"typeName\", \"Mutation\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"sendHeartbeatNotification\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:aws:sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthauthenticatedUserRole4EDA16FBRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:aws:sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthunauthenticatedUserRoleD8E10D4ARef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n{}\n## [End] Stash resolver specific context.. **"
+      ]
+     ]
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/387d5992f5fc03d05de27289457dcc374a84c42a889acb504aff1031047dde00.vtl"
+    },
+    "TypeName": "Mutation"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/mutationSendHeartbeatNotificationResolver"
+   }
+  },
+  "MutationSendHeartbeatNotificationAuthFNMutationSendHeartbeatNotificationAuthFNAppSyncFunction24B4095C": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPINONEDSE04017B7Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationSendHeartbeatNotificationAuthFN",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/8e18f3cebc70282364886a18ce867a8409c5568357ceaed6f86c71740cb443eb.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/MutationSendHeartbeatNotificationAuthFN/MutationSendHeartbeatNotificationAuthFN.AppSyncFunction"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WNTW6DQAyFz5L94BboBRqirKKqggNEzoxBDuBBeCZRhLh7NZNVV5+f/H4qqOoaPg/41MK6sZj4BtsPaSDXBbSjaXppvDgO7MXgU68bLou+xMJ2wfnm8IQBOx9XS8n7X52j2BRsvPQ8xBVzS9NLS+qnB627YZxha/2U/Zm/fmL7SvJ97UbrK6pSUPhOMFrDMdqRwhGVdpPK8mL+dgEHlmE34h3BXT8e1ReUJZSHuzIXa5TAM0H75h9MjZCyAAEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Parameters": {
+  "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthauthenticatedUserRole4EDA16FBRef": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthunauthenticatedUserRoleD8E10D4ARef": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPINONEDSE04017B7Name": {
+   "Type": "String"
+  }
+ }
+}
