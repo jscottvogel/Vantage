@@ -9,15 +9,15 @@ export const auth = defineAuth({
         preSignUp,
     },
     userAttributes: {
-        "custom:role": {
+        "role": {
             dataType: "String",
             mutable: true,
         },
-        "custom:tenant_id": {
+        "tenant_id": {
             dataType: "String",
             mutable: true,
         },
-        "custom:org_name": {
+        "org_name": {
             dataType: "String",
             mutable: true,
         },
