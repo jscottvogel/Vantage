@@ -20,8 +20,8 @@ export const AuthService = {
                 id: authUser.userId,
                 email: attributes.email || '',
                 name: attributes.name || attributes.email?.split('@')[0] || 'User',
-                role: (attributes['custom:role'] as 'Admin' | 'Member') || 'Member',
-                tenantId: attributes['custom:tenant_id'] || '',
+                role: (attributes.profile as 'Admin' | 'Member') || 'Member',
+                tenantId: attributes.locale || '',
                 status: 'Active'
             };
         } catch (error) {
@@ -69,9 +69,9 @@ export const AuthService = {
                 userAttributes: {
                     email,
                     name,
-                    'custom:role': 'Admin',
-                    'custom:tenant_id': tenantId,
-                    'custom:org_name': orgName // Store org name in attribute for simple retrieval
+                    'profile': 'Admin',        // profile -> Role
+                    'locale': tenantId,        // locale -> TenantID
+                    'nickname': orgName        // nickname -> OrgName
                 }
             }
         });
