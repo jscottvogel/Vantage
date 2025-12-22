@@ -1,15 +1,15 @@
-import type { StrategicObjective, StatusUpdate, RiskSignal, AuditLogEntry } from '../types';
+import type { StrategicObjective, Heartbeat, Risk, AuditLogEntry } from '../types';
 
 // Agent Interfaces
 export interface CollectorAgent {
-    generatePrompt(objective: StrategicObjective, lastUpdate?: StatusUpdate): string;
-    parseResponse(responseText: string): Partial<StatusUpdate>;
+    generatePrompt(objective: StrategicObjective, lastHeartbeat?: Heartbeat): string;
+    parseResponse(responseText: string): Partial<Heartbeat>;
 }
 
 export interface SynthesizerAgent {
-    analyzeUpdate(update: StatusUpdate, history: StatusUpdate[], objective: StrategicObjective): {
-        riskFlags: RiskSignal[];
-        credibilityScore: number;
+    analyzeUpdate(heartbeat: Heartbeat, history: Heartbeat[], objective: StrategicObjective): {
+        risks: Risk[];
+        confidenceScore: number; // mapped from credibility
         summary: string;
     };
 }
@@ -21,49 +21,45 @@ export interface AuditAgent {
 // Mock Implementations
 
 export const MockCollector: CollectorAgent = {
-    generatePrompt: (objective, lastUpdate) => {
-        if (!lastUpdate) {
+    generatePrompt: (objective, lastHeartbeat) => {
+        if (!lastHeartbeat) {
             return `Hi ${objective.ownerId}, please provide the first status update for ${objective.name}. What is the current outlook?`;
         }
-        return `Hi ${objective.ownerId}, last week you reported ${lastUpdate.health}. What has changed? Is the target date of ${objective.targetDate} still realistic?`;
+        return `Hi ${objective.ownerId}, last period you reported ${lastHeartbeat.healthSignal}. What has changed? Is the target date of ${objective.targetDate} still realistic?`;
     },
     parseResponse: (text) => {
-        const health = text.toLowerCase().includes('delayed') || text.toLowerCase().includes('risk') ? 'Red' : 'Green';
+        const health = text.toLowerCase().includes('delayed') || text.toLowerCase().includes('risk') ? 'red' : 'green';
         return {
             narrative: text,
-            health: health,
+            healthSignal: health,
             confidence: 'Medium'
         };
     }
 };
 
 export const MockSynthesizer: SynthesizerAgent = {
-    analyzeUpdate: (update, _history, _objective) => {
-        const risks: RiskSignal[] = [];
+    analyzeUpdate: (heartbeat, _history, _objective) => {
+        const risks: Risk[] = [];
 
-        if (update.health === 'Green' && update.narrative.length < 20) {
+        if (heartbeat.healthSignal === 'green' && heartbeat.narrative.length < 20) {
             risks.push({
-                id: crypto.randomUUID(),
-                type: 'Ambiguity',
-                severity: 'Medium',
                 description: 'Update is too brief for a Green status.',
-                detectedAt: new Date().toISOString()
+                severity: 'medium',
+                mitigation: 'Request more detail.'
             });
         }
 
-        if (update.health === 'Green' && update.narrative.toLowerCase().includes('blocker')) {
+        if (heartbeat.healthSignal === 'green' && heartbeat.narrative.toLowerCase().includes('blocker')) {
             risks.push({
-                id: crypto.randomUUID(),
-                type: 'Consistency',
-                severity: 'High',
                 description: 'Narrative mentions blockers but health is Green.',
-                detectedAt: new Date().toISOString()
+                severity: 'high',
+                mitigation: 'Clarify status.'
             });
         }
 
         return {
-            riskFlags: risks,
-            credibilityScore: risks.length > 0 ? 60 : 90,
+            risks: risks,
+            confidenceScore: risks.length > 0 ? 60 : 90,
             summary: `Analyzed update. Found ${risks.length} potential risks.`
         };
     }

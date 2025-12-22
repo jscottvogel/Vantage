@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
-import { X, Target, Briefcase, Layers, ArrowRight, Activity, TrendingUp, TrendingDown, Minus, Plus, Trash2 } from 'lucide-react';
+import { X, Target, Briefcase, Layers, ArrowRight, Activity, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { KeyResultHeartbeatDialog } from './KeyResultHeartbeatDialog';
 import { NotificationService } from '../services/notification';
@@ -104,6 +104,32 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
         // if (confirm('Delete this Key Result? This will remove all associated initiatives and heartbeats.')) {
         store.removeKeyResult(objectiveId, outcomeId, krId);
         // }
+    };
+
+    const handleAddInitiative = (krId: string) => {
+        if (!newInitName.trim()) return;
+
+        const newInit: Initiative = {
+            id: crypto.randomUUID(),
+            name: newInitName,
+            ownerId: newInitOwnerId,
+            status: 'active',
+            startDate: new Date().toISOString(),
+            targetEndDate: objective.targetDate,
+            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
+            supportedKeyResults: [],
+            heartbeats: [],
+            link: ''
+        };
+
+        store.addInitiative(objectiveId, selectedKR?.krId || krId, newInit); // Fallback to passed krId if selected null
+        setAddingToKR(null);
+        setNewInitName('');
+    };
+
+    const handleDeleteInitiative = (krId: string, initId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        store.removeInitiative(objectiveId, krId, initId);
     };
 
     const getLatestHeartbeat = (heartbeats: Heartbeat[]) => {

@@ -1,37 +1,46 @@
 import { MockCollector, MockSynthesizer, MockAudit } from './agents';
-import type { StrategicObjective, StatusUpdate } from '../types';
+import type { StrategicObjective, Heartbeat } from '../types';
 
 export class IntelligenceLoop {
-    static async processUpdate(objective: StrategicObjective, rawText: string, authorId: string): Promise<StatusUpdate> {
+    static async processUpdate(objective: StrategicObjective, rawText: string, authorId: string): Promise<Heartbeat> {
         // 1. Capture & Parse
         const draft = MockCollector.parseResponse(rawText);
 
-        const update: StatusUpdate = {
+        const heartbeat: Heartbeat = {
             id: crypto.randomUUID(),
             objectiveId: objective.id,
-            authorId: authorId,
-            timestamp: new Date().toISOString(),
-            health: draft.health || 'Green',
+            // authorId: authorId, // Heartbeat doesn't have authorId at top level, stored in ownerAttestation usually
+            periodStart: new Date().toISOString(), // Todo: determine period
+            periodEnd: new Date().toISOString(),
+            healthSignal: draft.healthSignal || 'green',
             confidence: draft.confidence || 'Medium',
             narrative: draft.narrative || rawText,
+            confidenceToExpectedImpact: 0,
+            leadingIndicators: [],
+            evidence: [],
+            risks: [],
+            ownerAttestation: {
+                attestedBy: authorId,
+                attestedOn: new Date().toISOString()
+            }
         };
 
         // 2. Synthesize & Analyze
-        const analysis = MockSynthesizer.analyzeUpdate(update, [], objective);
+        const analysis = MockSynthesizer.analyzeUpdate(heartbeat, [], objective);
 
-        update.aiRiskFlags = analysis.riskFlags;
-        update.aiCredibilityScore = analysis.credibilityScore;
+        heartbeat.risks = analysis.risks;
+        // heartbeat.aiCredibilityScore = analysis.confidenceScore; // Not in Heartbeat model yet, ignore.
 
         // 3. Audit
         MockAudit.logEvent({
             tenantId: objective.tenantId,
             actorId: 'system-synthesizer',
             action: 'analyze_update',
-            resourceId: update.id,
-            resourceType: 'Update',
+            resourceId: heartbeat.id,
+            resourceType: 'StrategicObjective', // Mapped to closest resource type 
             details: JSON.stringify(analysis)
         });
 
-        return update;
+        return heartbeat;
     }
 }
