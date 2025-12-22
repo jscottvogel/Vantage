@@ -1,9 +1,10 @@
+```javascript
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Building2 } from 'lucide-react';
 
 export function LoginPage() {
     const [step, setStep] = useState<'email' | 'password'>('email');

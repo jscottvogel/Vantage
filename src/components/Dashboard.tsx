@@ -11,7 +11,7 @@ import { InitiativeDetailDialog } from './InitiativeDetailDialog';
 
 export function Dashboard() {
     const objectives = useStore(state => state.objectives);
-    const updates = useStore(state => state.updates);
+    // updates removed from store
     const logout = useStore(state => state.logout);
     const user = useStore(state => state.currentUser);
 
@@ -80,7 +80,6 @@ export function Dashboard() {
                     <ObjectiveCard
                         key={obj.id}
                         objective={obj}
-                        lastUpdate={updates[obj.id]}
                         onDrillDown={(id) => setSelectedObjectiveId(id)}
                     />
                 ))}

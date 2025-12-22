@@ -28,8 +28,8 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
     }
 
     // Collect all initiatives across this Key Result
-    // (Actually a KR has direct initiatives, so we can just use those)
-    const availableInitiatives = keyResult ? keyResult.initiatives : [];
+    // (Actually a KR has direct initiatives, so we can just use those if needed, but currently unused in this form)
+    // const availableInitiatives = keyResult ? keyResult.initiatives : [];
 
     const [overallConfidence, setOverallConfidence] = useState<ConfidenceLevel>('Medium');
     const [confidenceTrend, setConfidenceTrend] = useState<'Improving' | 'Stable' | 'Declining'>('Stable');

@@ -1,7 +1,8 @@
-import type { StrategicObjective, Heartbeat, HealthSignal } from '../types';
+```typescript
+import type { StrategicObjective } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Target, Briefcase, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Target, Briefcase, Layers, Minus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
@@ -18,11 +19,6 @@ export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
     const latestHeartbeat = objective.heartbeats && objective.heartbeats.length > 0
         ? objective.heartbeats[objective.heartbeats.length - 1]
         : null;
-
-    // TODO: Map 'trend' if we add it back. For now, omit or infer.
-    const trendIcon = (trend: string = 'stable') => {
-        return <Minus className="w-3 h-3 text-gray-400" />;
-    };
 
     const healthColor = {
         'Red': 'bg-red-100 text-red-800 border-red-200',
