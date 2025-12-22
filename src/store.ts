@@ -144,7 +144,10 @@ export const useStore = create<AppState>((set) => ({
             }
 
         } catch (e: any) {
-            set({ isLoading: false, authError: e.message || "Signup failed" });
+            console.error("Signup failed:", e);
+            // Try to extract useful message from AWS error
+            const msg = e.message || (typeof e === 'string' ? e : JSON.stringify(e));
+            set({ isLoading: false, authError: `Signup failed: ${msg}` });
         }
     },
 

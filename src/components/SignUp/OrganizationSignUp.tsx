@@ -11,7 +11,7 @@ export function OrganizationSignUp() {
     const [orgName, setOrgName] = useState('');
     const [adminName, setAdminName] = useState('');
     const [adminEmail, setAdminEmail] = useState('');
-    const [password, setPassword] = useState('password123'); // Dev default
+    const [password, setPassword] = useState('Password123!'); // Dev default (strong)
 
     const handleOrgSubmit = (e: React.FormEvent) => {
         e.preventDefault();
