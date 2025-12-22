@@ -1,4 +1,4 @@
-```typescript
+
 import type { StrategicObjective } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
