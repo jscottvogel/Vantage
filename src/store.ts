@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { AuthService } from './services/auth';
-import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult, Organization, HeartbeatCadence } from './types';
+import type { StrategicObjective, User, OutcomeStatus, Heartbeat, Initiative, KeyResult, Organization, HeartbeatCadence } from './types';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../amplify/data/resource';
 
@@ -11,7 +11,7 @@ interface AppState {
     currentOrganization: Organization | null;
     users: User[];
     objectives: StrategicObjective[];
-    updates: Record<string, StatusUpdate>; // keyed by objectiveId
+    // updates: Record<string, StatusUpdate>; // Removed in favor of nested heartbeats
 
     // Plan Limits
     planName: 'Free' | 'Pro'; // Derived from currentOrganization usually, kept for compat or simple ref
@@ -52,18 +52,18 @@ interface AppState {
                 initiatives: { name: string; ownerId: string; link?: string }[];
             }[];
         }[]
-    ) => void;
-    updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
-    addUpdate: (update: StatusUpdate) => void;
-    addHeartbeat: (objectiveId: string, initiativeId: string, heartbeat: Heartbeat) => void;
-    addKeyResultHeartbeat: (objectiveId: string, krId: string, heartbeat: KeyResultHeartbeat) => void;
-    addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => void;
-    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => void;
-    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => void;
 
-    addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => void;
-    updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => void;
-    removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => void;
+        updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
+
+        addHeartbeat: (targetId: string, targetType: 'objective' | 'kr' | 'initiative', heartbeat: Heartbeat) => Promise<void>;
+
+        addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => void;
+        updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => void;
+        removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => void;
+
+        addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => void;
+        updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => void;
+        removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => void;
 }
 
 // Initial Mock Data
@@ -83,7 +83,7 @@ export const useStore = create<AppState>((set, get) => ({
     currentOrganization: MOCK_ORG,
     users: [], // Start empty
     objectives: [],
-    updates: {},
+    // updates: {},
     planName: 'Free',
     maxActiveObjectives: 2,
     isLoading: true,
@@ -109,10 +109,36 @@ export const useStore = create<AppState>((set, get) => ({
                     tenantId: r.tenantId || '',
                     status: (r.status as 'Active' | 'Invited') || 'Active'
                 }));
-            }
 
-            set({ currentUser: user, users: team, isLoading: false });
+                // Fetch Objectives with nested relations
+                const { data: objList } = await client.models.StrategicObjective.list({
+                    filter: { tenantId: { eq: user.tenantId } },
+                    selectionSet: [
+                        'id', 'name', 'ownerId', 'strategicValue', 'targetDate', 'status', 'currentHealth', 'riskScore', 'tenantId', 'createdAt', 'updatedAt',
+
+                        'heartbeats.*',
+
+                        'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
+
+                        'outcomes.keyResults.id', 'outcomes.keyResults.description', 'outcomes.keyResults.ownerId', 'outcomes.keyResults.startDate', 'outcomes.keyResults.targetDate', 'outcomes.keyResults.heartbeatCadence.*',
+                        'outcomes.keyResults.heartbeats.*',
+
+                        'outcomes.keyResults.initiatives.id', 'outcomes.keyResults.initiatives.name', 'outcomes.keyResults.initiatives.ownerId', 'outcomes.keyResults.initiatives.link', 'outcomes.keyResults.initiatives.status', 'outcomes.keyResults.initiatives.startDate', 'outcomes.keyResults.initiatives.targetEndDate',
+                        'outcomes.keyResults.initiatives.heartbeats.*'
+                    ]
+                });
+
+                // Process loaded objectives to match app properties if needed
+                // (Most properties map directly, but we ensure structure)
+                // Note: The selectionSet returns flat arrays or nested objects depending on client version, 
+                // but Gen 2 strongly typed client usually maps to object structure.
+                // We'll cast to StrategicObjective[] for state compatibility.
+                set({ currentUser: user, users: team, objectives: objList as unknown as StrategicObjective[], isLoading: false });
+            } else {
+                set({ currentUser: user, users: team, isLoading: false });
+            }
         } catch (e) {
+            console.error("Session check failed", e); // Log error for debugging
             set({ currentUser: null, users: [], isLoading: false });
         }
     },
@@ -251,103 +277,163 @@ export const useStore = create<AppState>((set, get) => ({
         }
     },
 
-    createObjective: (name, ownerId, strategicValue, targetDate, outcomes) => set(state => {
+    createObjective: async (name, ownerId, strategicValue, targetDate, outcomes) => {
+        set({ isLoading: true });
+        try {
+            const tenantId = get().currentUser?.tenantId;
+            if (!tenantId) throw new Error("No tenant ID found");
 
-        // Objective Owner Display Logic
-        const objectiveOwnerName = state.users.find(u => u.id === ownerId)?.name || ownerId;
+            // 1. Create Objective
+            const { data: newObj } = await client.models.StrategicObjective.create({
+                name,
+                ownerId,
+                strategicValue,
+                targetDate,
+                status: 'Active',
+                currentHealth: 'Green',
+                riskScore: 0,
+                tenantId
+            });
 
-        const newObjective: StrategicObjective = {
-            id: crypto.randomUUID(),
-            name,
-            ownerId: objectiveOwnerName,
-            status: 'Active',
-            strategicValue,
-            targetDate,
+            if (!newObj) throw new Error("Failed to create objective");
 
-            // Map Outcome Layer
-            outcomes: outcomes.map(out => ({
-                id: crypto.randomUUID(),
-                goal: out.goal,
-                benefit: out.benefit,
-                startDate: out.startDate,
-                targetDate: out.targetDate,
-                heartbeatCadence: out.heartbeatCadence,
-                keyResults: out.keyResults.map(kr => ({
-                    ...kr,
-                    id: crypto.randomUUID(),
-                    startDate: kr.startDate,
-                    targetDate: kr.targetDate,
-                    heartbeatCadence: kr.heartbeatCadence,
-                    heartbeats: [], // Init empty heartbeats
-                    initiatives: kr.initiatives.map(init => ({
-                        ...init,
-                        id: crypto.randomUUID(),
-                        status: 'active',
-                        startDate: new Date().toISOString(),
-                        targetEndDate: targetDate, // Default to objective target
-                        heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
-                        supportedKeyResults: [],
-                        heartbeats: []
-                    }))
-                }))
-            })),
+            const createdOutcomes = [];
 
-            currentHealth: 'Green', // Default
-            riskScore: 0,
-            tenantId: state.currentUser?.tenantId || 't1',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
+            // 2. Create Outcomes
+            for (const out of outcomes) {
+                const { data: newOut } = await client.models.Outcome.create({
+                    objectiveId: newObj.id,
+                    goal: out.goal,
+                    benefit: out.benefit,
+                    startDate: out.startDate,
+                    targetDate: out.targetDate,
+                    heartbeatCadence: out.heartbeatCadence
+                });
+                if (!newOut) continue;
 
-        return { objectives: [...state.objectives, newObjective] };
-    }),
+                const createdKRs = [];
+
+                // 3. Create Key Results
+                for (const kr of out.keyResults) {
+                    const { data: newKr } = await client.models.KeyResult.create({
+                        outcomeId: newOut.id,
+                        description: kr.description,
+                        ownerId: kr.ownerId,
+                        startDate: kr.startDate,
+                        targetDate: kr.targetDate,
+                        heartbeatCadence: kr.heartbeatCadence
+                    });
+                    if (!newKr) continue;
+
+                    const createdInits = [];
+
+                    // 4. Create Initiatives
+                    for (const init of kr.initiatives) {
+                        const { data: newInit } = await client.models.Initiative.create({
+                            keyResultId: newKr.id,
+                            name: init.name,
+                            ownerId: init.ownerId,
+                            link: init.link,
+                            status: 'active',
+                            startDate: new Date().toISOString(),
+                            targetEndDate: targetDate
+                        });
+                        createdInits.push(newInit);
+                    }
+                    createdKRs.push({ ...newKr, initiatives: createdInits });
+                }
+                createdOutcomes.push({ ...newOut, keyResults: createdKRs });
+            }
+
+            // Construct full object for local state update
+            // We use 'as unknown as StrategicObjective' because the API return types might differ slightly (e.g. nullables)
+            // but we want to treat them as fully hydrated in the store.
+            const fullObj: StrategicObjective = {
+                ...newObj,
+                outcomes: createdOutcomes
+            } as unknown as StrategicObjective;
+
+            set(state => ({
+                objectives: [...state.objectives, fullObj],
+                isLoading: false
+            }));
+
+        } catch (e: any) {
+            console.error("Create Objective Failed:", e);
+            set({ isLoading: false });
+            // Ideally we'd set an error state here
+        }
+    },
 
     updateObjectiveStatus: (id, status) => set(state => ({
         objectives: state.objectives.map(i => i.id === id ? { ...i, status } : i)
     })),
 
-    addUpdate: (update) => set(state => ({
-        updates: { ...state.updates, [update.objectiveId]: update }
-    })),
+    addHeartbeat: async (targetId: string, targetType: 'objective' | 'kr' | 'initiative', heartbeat: Heartbeat) => {
+        try {
+            const payload: any = {
+                periodStart: heartbeat.periodStart,
+                periodEnd: heartbeat.periodEnd,
+                healthSignal: heartbeat.healthSignal,
+                confidence: heartbeat.confidence || 'Medium',
+                narrative: heartbeat.narrative,
+                confidenceToExpectedImpact: heartbeat.confidenceToExpectedImpact,
+                leadingIndicators: heartbeat.leadingIndicators,
+                evidence: heartbeat.evidence,
+                risks: heartbeat.risks,
+                ownerAttestation: heartbeat.ownerAttestation
+            };
 
-    addHeartbeat: (objectiveId, initiativeId, heartbeat) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out => ({
-                    ...out,
-                    keyResults: out.keyResults.map(kr => ({
-                        ...kr,
-                        initiatives: kr.initiatives.map(init =>
-                            init.id === initiativeId ? {
-                                ...init,
-                                heartbeats: [...init.heartbeats, heartbeat]
-                            } : init
-                        )
-                    }))
-                }))
-            } : obj
-        )
-    })),
+            if (targetType === 'objective') payload.objectiveId = targetId;
+            if (targetType === 'kr') payload.keyResultId = targetId;
+            if (targetType === 'initiative') payload.initiativeId = targetId;
 
-    addKeyResultHeartbeat: (objectiveId, krId, heartbeat) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out => ({
-                    ...out,
-                    keyResults: out.keyResults.map(kr =>
-                        kr.id === krId ? {
-                            ...kr,
-                            heartbeats: [...kr.heartbeats, heartbeat]
-                        } : kr
-                    )
-                }))
-            } : obj
-        )
-    })),
+            await client.models.Heartbeat.create(payload);
 
-    addInitiative: (objectiveId, krId, initiative) => set(state => ({
+            // Optimistic Update
+            set(state => {
+                // Helper to add heartbeat
+                const add = (items: Heartbeat[] | undefined) => [...(items || []), heartbeat];
+
+                return {
+                    objectives: state.objectives.map(obj => {
+                        // 1. Target is Objective
+                        if (targetType === 'objective' && obj.id === targetId) {
+                            return { ...obj, heartbeats: add(obj.heartbeats) };
+                        }
+
+                        return {
+                            ...obj,
+                            outcomes: obj.outcomes.map(out => ({
+                                ...out,
+                                keyResults: out.keyResults.map(kr => {
+                                    // 2. Target is KR
+                                    if (targetType === 'kr' && kr.id === targetId) {
+                                        return { ...kr, heartbeats: add(kr.heartbeats) };
+                                    }
+
+                                    return {
+                                        ...kr,
+                                        initiatives: kr.initiatives.map(init => {
+                                            // 3. Target is Initiative
+                                            if (targetType === 'initiative' && init.id === targetId) {
+                                                return { ...init, heartbeats: add(init.heartbeats) };
+                                            }
+                                            return init;
+                                        })
+                                    };
+                                })
+                            }))
+                        };
+                    })
+                };
+            });
+        } catch (e) {
+            console.error("Failed to add heartbeat", e);
+        }
+    },
+
+    addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,
@@ -364,7 +450,7 @@ export const useStore = create<AppState>((set, get) => ({
         )
     })),
 
-    removeInitiative: (objectiveId, krId, initiativeId) => set(state => ({
+    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,
@@ -381,7 +467,7 @@ export const useStore = create<AppState>((set, get) => ({
         )
     })),
 
-    updateInitiative: (objectiveId, krId, initiativeId, updates) => set(state => ({
+    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,
@@ -398,7 +484,7 @@ export const useStore = create<AppState>((set, get) => ({
         )
     })),
 
-    addKeyResult: (objectiveId, outcomeId, keyResult) => set(state => ({
+    addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,
@@ -412,7 +498,7 @@ export const useStore = create<AppState>((set, get) => ({
         )
     })),
 
-    updateKeyResult: (objectiveId, outcomeId, krId, updates) => set(state => ({
+    updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,
@@ -426,7 +512,7 @@ export const useStore = create<AppState>((set, get) => ({
         )
     })),
 
-    removeKeyResult: (objectiveId, outcomeId, krId) => set(state => ({
+    removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => set(state => ({
         objectives: state.objectives.map(obj =>
             obj.id === objectiveId ? {
                 ...obj,

@@ -170,13 +170,22 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
         setOutcomes(newOutcomes);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (name && targetDate && currentUser) {
-            // Basic validation: Ensure at least one outcome with a goal
-            const validOutcomes = outcomes.filter(o => o.goal.trim().length > 0);
-            createObjective(name, currentUser.id, strategicValue, targetDate, validOutcomes);
-            onClose();
+            setIsSubmitting(true);
+            try {
+                // Basic validation: Ensure at least one outcome with a goal
+                const validOutcomes = outcomes.filter(o => o.goal.trim().length > 0);
+                await createObjective(name, currentUser.id, strategicValue, targetDate, validOutcomes);
+                onClose();
+            } catch (error) {
+                console.error("Failed to create objective", error);
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -472,8 +481,10 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                         </div>
 
                         <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-                            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                            <Button type="submit">Create Objective</Button>
+                            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Creating...' : 'Create Objective'}
+                            </Button>
                         </div>
                     </form>
                 </CardContent>

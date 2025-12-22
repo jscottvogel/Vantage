@@ -97,44 +97,31 @@ export interface OwnerAttestation {
 
 export interface Heartbeat {
     id: string;
-    initiativeId: string;
+
+    // Associations (Optional)
+    objectiveId?: string;
+    keyResultId?: string;
+    initiativeId?: string;
+
+    // Core Data
     periodStart: string;
     periodEnd: string;
     healthSignal: HealthSignal;
-    leadingIndicators: LeadingIndicator[];
-    evidence: Evidence[];
-    risks: Risk[];
-    confidenceToExpectedImpact: number;
-    ownerAttestation: OwnerAttestation;
-}
+    confidence?: ConfidenceLevel;
+    narrative: string;
 
-export type Confidence = 'High' | 'Medium' | 'Low';
-export type ConfidenceTrend = 'Improving' | 'Stable' | 'Declining';
+    confidenceToExpectedImpact?: number;
 
-export interface HeartbeatLink {
-    initiativeId: string;
-    influenceLevel: 'Primary' | 'Supporting';
-}
+    // Supporting Data
+    leadingIndicators?: LeadingIndicator[];
+    evidence?: Evidence[];
+    risks?: Risk[];
 
-export interface KeyResultHeartbeat {
-    id: string;
-    keyResultId: string;
-    keyResultStatement: string; // Snapshot of description
-    timestamp: string;
+    ownerAttestation?: OwnerAttestation;
 
-    overallConfidence: Confidence;
-    confidenceTrend: ConfidenceTrend;
-
-    primaryInitiatives: HeartbeatLink[];
-    confidenceDrivers: string[];
-    riskDrivers: string[];
-
-    knownUnknowns: string[];
-    informationGaps: string[];
-    confidenceLimitations: string;
-
-    heartbeatSummary: string;
-    sourceInitiativeHeartbeatIds: string[];
+    // Metadata (Created via AppSync usually, but good to have in type)
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface KeyResult {
@@ -145,7 +132,7 @@ export interface KeyResult {
     targetDate: string;
     heartbeatCadence: HeartbeatCadence;
     initiatives: Initiative[];
-    heartbeats: KeyResultHeartbeat[];
+    heartbeats: Heartbeat[];
 }
 
 export interface Outcome {
@@ -170,6 +157,9 @@ export interface StrategicObjective {
     // New Layer
     outcomes: Outcome[];
 
+    // Unified Heartbeats
+    heartbeats: Heartbeat[];
+
     // Computed/Derived
     currentHealth: UpdateHealth;
     riskScore: number; // 0-100
@@ -180,30 +170,8 @@ export interface StrategicObjective {
     updatedAt: string;
 }
 
-export interface StatusUpdate {
-    id: string;
-    objectiveId: string;
-    authorId: string;
-    timestamp: string;
+// Remove StatusUpdate, RiskSignal as they are now merged or unused
 
-    health: UpdateHealth;
-    confidence: ConfidenceLevel;
-    narrative: string; // The human written text
-    blockers?: string;
-
-    // AI Analysis
-    aiCredibilityScore?: number; // 0-100
-    aiRiskFlags?: RiskSignal[];
-}
-
-export interface RiskSignal {
-    id: string;
-    type: SignalType;
-    severity: RiskLevel;
-    description: string;
-    detectedAt: string;
-    sourceUpdateId?: string;
-}
 
 export interface AuditLogEntry {
     id: string;
