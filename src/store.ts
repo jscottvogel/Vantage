@@ -11,10 +11,9 @@ interface AppState {
     currentOrganization: Organization | null;
     users: User[];
     objectives: StrategicObjective[];
-    // updates: Record<string, StatusUpdate>; // Removed in favor of nested heartbeats
 
     // Plan Limits
-    planName: 'Free' | 'Pro'; // Derived from currentOrganization usually, kept for compat or simple ref
+    planName: 'Free' | 'Pro';
     maxActiveObjectives: number;
     isLoading: boolean;
     authError: string | null;
@@ -25,7 +24,8 @@ interface AppState {
     logout: () => Promise<void>;
 
     // Org & User Management
-    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<void>;
+    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<boolean>;
+    confirmSignUp: (email: string, code: string) => Promise<void>;
     updateOrganization: (updates: Partial<Organization>) => void;
 
     inviteUser: (email: string, role: 'Admin' | 'Member') => void;
@@ -76,15 +76,11 @@ const MOCK_ORG: Organization = {
     updatedAt: new Date().toISOString()
 };
 
-// Initial Mock Data - REMOVED
-// const INITIAL_USERS: User[] = [];
-
 export const useStore = create<AppState>((set, get) => ({
     currentUser: null, // Start logged out
     currentOrganization: MOCK_ORG,
     users: [], // Start empty
     objectives: [],
-    // updates: {},
     planName: 'Free',
     maxActiveObjectives: 2,
     isLoading: true,
@@ -101,8 +97,6 @@ export const useStore = create<AppState>((set, get) => ({
                     filter: { tenantId: { eq: user.tenantId } }
                 });
 
-                // Map DB records to User type (ensure role is cast correctly)
-                // Map DB records to User type (ensure role is cast correctly)
                 team = userRecords.map(r => ({
                     id: r.id,
                     email: r.email,
@@ -112,7 +106,7 @@ export const useStore = create<AppState>((set, get) => ({
                     status: (r.status as 'Active' | 'Invited') || 'Active'
                 }));
 
-                // Self-healing: If current user is not in the DB (e.g. first login after verification), create them.
+                // Self-healing: If current user is not in the DB
                 const currentUserInDb = team.find(u => u.email === user.email);
                 if (!currentUserInDb) {
                     try {
@@ -141,7 +135,7 @@ export const useStore = create<AppState>((set, get) => ({
                 }
 
                 // Fetch Organization Details
-                let activeOrg = get().currentOrganization; // Fallback
+                let activeOrg = get().currentOrganization;
                 if (user.tenantId) {
                     try {
                         const { data: orgData } = await client.models.Organization.get({ id: user.tenantId });
@@ -165,30 +159,21 @@ export const useStore = create<AppState>((set, get) => ({
                     filter: { tenantId: { eq: user.tenantId } },
                     selectionSet: [
                         'id', 'name', 'ownerId', 'strategicValue', 'targetDate', 'status', 'currentHealth', 'riskScore', 'tenantId', 'createdAt', 'updatedAt',
-
                         'heartbeats.*',
-
                         'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
-
                         'outcomes.keyResults.id', 'outcomes.keyResults.description', 'outcomes.keyResults.ownerId', 'outcomes.keyResults.startDate', 'outcomes.keyResults.targetDate', 'outcomes.keyResults.heartbeatCadence.*',
                         'outcomes.keyResults.heartbeats.*',
-
                         'outcomes.keyResults.initiatives.id', 'outcomes.keyResults.initiatives.name', 'outcomes.keyResults.initiatives.ownerId', 'outcomes.keyResults.initiatives.link', 'outcomes.keyResults.initiatives.status', 'outcomes.keyResults.initiatives.startDate', 'outcomes.keyResults.initiatives.targetEndDate',
                         'outcomes.keyResults.initiatives.heartbeats.*'
                     ]
                 });
 
-                // Process loaded objectives to match app properties if needed
-                // (Most properties map directly, but we ensure structure)
-                // Note: The selectionSet returns flat arrays or nested objects depending on client version, 
-                // but Gen 2 strongly typed client usually maps to object structure.
-                // We'll cast to StrategicObjective[] for state compatibility.
                 set({ currentUser: user, users: team, currentOrganization: activeOrg, objectives: objList as unknown as StrategicObjective[], isLoading: false });
             } else {
                 set({ currentUser: user, users: team, isLoading: false });
             }
         } catch (e) {
-            console.error("Session check failed", e); // Log error for debugging
+            console.error("Session check failed", e);
             set({ currentUser: null, users: [], isLoading: false });
         }
     },
@@ -197,7 +182,6 @@ export const useStore = create<AppState>((set, get) => ({
         set({ isLoading: true, authError: null });
         try {
             await AuthService.signInWithPassword(email, password);
-            // After login, we must load the session data (user, objectives, etc)
             await get().checkSession();
         } catch (e: any) {
             console.error("Login failed:", e);
@@ -214,61 +198,19 @@ export const useStore = create<AppState>((set, get) => ({
     signupOrganization: async (orgName, adminEmail, adminName, password = 'password123') => {
         set({ isLoading: true, authError: null });
         try {
-            await AuthService.signUp(adminEmail, password, adminName, orgName);
+            const { nextStep } = await AuthService.signUp(adminEmail, password, adminName, orgName);
 
-            // Try to login to see if confirmed
-            try {
-                await AuthService.signInWithPassword(adminEmail, password);
-                const user = await AuthService.getCurrentUser();
-
-                if (user) {
-                    // 1. Create Organization Record
-                    try {
-                        await client.models.Organization.create({
-                            id: user.tenantId, // IMPORTANT: Match tenantId
-                            name: orgName,
-                            subscriptionTier: 'Free',
-                            domain: adminEmail.split('@')[1]
-                        });
-                    } catch (orgErr) {
-                        console.error("Failed to persist organization details:", orgErr);
-                        // Non-fatal? We still want to log them in. 
-                    }
-
-                    // 2. Persist Admin User to Data Store
-                    await client.models.User.create({
-                        email: user.email,
-                        name: user.name,
-                        role: user.role,
-                        tenantId: user.tenantId,
-                        status: 'Active'
-                    });
-                }
-
-                // create org in local state too 
-                const newOrg: Organization = {
-                    id: user?.tenantId || crypto.randomUUID(),
-                    name: orgName,
-                    subscriptionTier: 'Free',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-
-                set({
-                    currentUser: user,
-                    currentOrganization: newOrg,
-                    isLoading: false
-                });
-            } catch (signInErr) {
-                set({ isLoading: false, authError: "Account created but verify required (check email)." });
+            if (nextStep?.signUpStep === 'CONFIRM_SIGN_UP') {
+                set({ isLoading: false });
+                return false;
             }
 
+            return true;
         } catch (e: any) {
             console.error("Signup failed:", e);
             let msg = e.message || "An unexpected error occurred.";
 
-            // Robust Error Mapping
-            const errorName = e.name || e.code; // Sometimes AWS SDK uses .code
+            const errorName = e.name || e.code;
             const errorMessage = e.message || '';
 
             if (errorName === 'InvalidPasswordException') {
@@ -284,12 +226,25 @@ export const useStore = create<AppState>((set, get) => ({
             }
 
             set({ isLoading: false, authError: msg });
+            return false;
+        }
+    },
+
+    confirmSignUp: async (email: string, code: string) => {
+        set({ isLoading: true, authError: null });
+        try {
+            await AuthService.confirmSignUp(email, code);
+            set({ isLoading: false });
+        } catch (e: any) {
+            console.error("Confirmation failed:", e);
+            set({ isLoading: false, authError: e.message || "Invalid code" });
+            throw e;
         }
     },
 
     updateOrganization: (updates) => set(state => state.currentOrganization ? ({
         currentOrganization: { ...state.currentOrganization, ...updates },
-        planName: updates.subscriptionTier === 'Pro' ? 'Pro' : state.planName // Sync plan name if tier changes
+        planName: updates.subscriptionTier === 'Pro' ? 'Pro' : state.planName
     }) : {}),
 
     inviteUser: async (email, role) => {
@@ -297,10 +252,9 @@ export const useStore = create<AppState>((set, get) => ({
         if (!currentUser?.tenantId) return;
 
         try {
-            // Create user in DB
             const { data: newUser } = await client.models.User.create({
                 email,
-                name: email.split('@')[0], // Default name
+                name: email.split('@')[0],
                 role,
                 tenantId: currentUser.tenantId,
                 status: 'Invited'
@@ -353,7 +307,6 @@ export const useStore = create<AppState>((set, get) => ({
             const tenantId = get().currentUser?.tenantId;
             if (!tenantId) throw new Error("No tenant ID found");
 
-            // 1. Create Objective
             const { data: newObj } = await client.models.StrategicObjective.create({
                 name,
                 ownerId,
@@ -369,7 +322,6 @@ export const useStore = create<AppState>((set, get) => ({
 
             const createdOutcomes = [];
 
-            // 2. Create Outcomes
             for (const out of outcomes) {
                 const { data: newOut } = await client.models.Outcome.create({
                     objectiveId: newObj.id,
@@ -383,7 +335,6 @@ export const useStore = create<AppState>((set, get) => ({
 
                 const createdKRs = [];
 
-                // 3. Create Key Results
                 for (const kr of out.keyResults) {
                     const { data: newKr } = await client.models.KeyResult.create({
                         outcomeId: newOut.id,
@@ -397,7 +348,6 @@ export const useStore = create<AppState>((set, get) => ({
 
                     const createdInits = [];
 
-                    // 4. Create Initiatives
                     for (const init of kr.initiatives) {
                         const { data: newInit } = await client.models.Initiative.create({
                             keyResultId: newKr.id,
@@ -415,9 +365,6 @@ export const useStore = create<AppState>((set, get) => ({
                 createdOutcomes.push({ ...newOut, keyResults: createdKRs });
             }
 
-            // Construct full object for local state update
-            // We use 'as unknown as StrategicObjective' because the API return types might differ slightly (e.g. nullables)
-            // but we want to treat them as fully hydrated in the store.
             const fullObj: StrategicObjective = {
                 ...newObj,
                 outcomes: createdOutcomes
@@ -431,7 +378,6 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e: any) {
             console.error("Create Objective Failed:", e);
             set({ isLoading: false });
-            // Ideally we'd set an error state here
         }
     },
 
@@ -460,14 +406,11 @@ export const useStore = create<AppState>((set, get) => ({
 
             await client.models.Heartbeat.create(payload);
 
-            // Optimistic Update
             set(state => {
-                // Helper to add heartbeat
                 const add = (items: Heartbeat[] | undefined) => [...(items || []), heartbeat];
 
                 return {
                     objectives: state.objectives.map(obj => {
-                        // 1. Target is Objective
                         if (targetType === 'objective' && obj.id === targetId) {
                             return { ...obj, heartbeats: add(obj.heartbeats) };
                         }
@@ -477,7 +420,6 @@ export const useStore = create<AppState>((set, get) => ({
                             outcomes: obj.outcomes.map(out => ({
                                 ...out,
                                 keyResults: out.keyResults.map(kr => {
-                                    // 2. Target is KR
                                     if (targetType === 'kr' && kr.id === targetId) {
                                         return { ...kr, heartbeats: add(kr.heartbeats) };
                                     }
@@ -485,7 +427,6 @@ export const useStore = create<AppState>((set, get) => ({
                                     return {
                                         ...kr,
                                         initiatives: kr.initiatives.map(init => {
-                                            // 3. Target is Initiative
                                             if (targetType === 'initiative' && init.id === targetId) {
                                                 return { ...init, heartbeats: add(init.heartbeats) };
                                             }
@@ -594,5 +535,5 @@ export const useStore = create<AppState>((set, get) => ({
                 )
             } : obj
         )
-    })),
+    }))
 }));

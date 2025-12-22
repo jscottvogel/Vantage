@@ -1,4 +1,4 @@
-import { signIn, signUp, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import { signIn, signUp, signOut, confirmSignUp, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 import type { User } from '../types';
 
 /**
@@ -82,5 +82,14 @@ export const AuthService = {
      */
     async signOut(): Promise<void> {
         await signOut();
+    },
+
+    /**
+     * Confirms the sign up with the code sent to the email.
+     * @param username The user's email address.
+     * @param confirmationCode The code sent to the user.
+     */
+    async confirmSignUp(username: string, confirmationCode: string) {
+        return await confirmSignUp({ username, confirmationCode });
     }
 };
