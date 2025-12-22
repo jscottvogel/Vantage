@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { AuthService } from './services/auth';
 import type { StrategicObjective, User, StatusUpdate, OutcomeStatus, Heartbeat, KeyResultHeartbeat, Initiative, KeyResult, Organization, HeartbeatCadence } from './types';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource';
+
+const client = generateClient<Schema>();
 
 interface AppState {
     currentUser: User | null;
@@ -71,16 +75,13 @@ const MOCK_ORG: Organization = {
     updatedAt: new Date().toISOString()
 };
 
-const INITIAL_USERS: User[] = [
-    { id: '1', name: 'Admin User', email: 'admin@vantage.inc', role: 'Admin', tenantId: 't1', status: 'Active' },
-    { id: '2', name: 'Sarah J.', email: 'sarah@vantage.inc', role: 'Member', tenantId: 't1', status: 'Active' },
-    { id: '3', name: 'Mike T.', email: 'mike@vantage.inc', role: 'Member', tenantId: 't1', status: 'Active' },
-];
+// Initial Mock Data - REMOVED
+// const INITIAL_USERS: User[] = [];
 
-export const useStore = create<AppState>((set) => ({
+export const useStore = create<AppState>((set, get) => ({
     currentUser: null, // Start logged out
     currentOrganization: MOCK_ORG,
-    users: INITIAL_USERS,
+    users: [], // Start empty
     objectives: [],
     updates: {},
     planName: 'Free',
@@ -91,9 +92,28 @@ export const useStore = create<AppState>((set) => ({
     checkSession: async () => {
         try {
             const user = await AuthService.getCurrentUser();
-            set({ currentUser: user, isLoading: false });
+
+            // Fetch users for the tenant
+            let team: User[] = [];
+            if (user?.tenantId) {
+                const { data: userRecords } = await client.models.User.list({
+                    filter: { tenantId: { eq: user.tenantId } }
+                });
+
+                // Map DB records to User type (ensure role is cast correctly)
+                team = userRecords.map(r => ({
+                    id: r.id,
+                    email: r.email,
+                    name: r.name || '',
+                    role: (r.role as 'Admin' | 'Member') || 'Member',
+                    tenantId: r.tenantId || '',
+                    status: (r.status as 'Active' | 'Invited') || 'Active'
+                }));
+            }
+
+            set({ currentUser: user, users: team, isLoading: false });
         } catch (e) {
-            set({ currentUser: null, isLoading: false });
+            set({ currentUser: null, users: [], isLoading: false });
         }
     },
 
@@ -124,6 +144,17 @@ export const useStore = create<AppState>((set) => ({
             try {
                 await AuthService.signInWithPassword(adminEmail, password);
                 const user = await AuthService.getCurrentUser();
+
+                if (user) {
+                    // Persist Admin User to Data Store
+                    await client.models.User.create({
+                        email: user.email,
+                        name: user.name,
+                        role: user.role,
+                        tenantId: user.tenantId,
+                        status: 'Active'
+                    });
+                }
 
                 // create org in local state too? 
                 const newOrg: Organization = {
@@ -165,24 +196,60 @@ export const useStore = create<AppState>((set) => ({
         planName: updates.subscriptionTier === 'Pro' ? 'Pro' : state.planName // Sync plan name if tier changes
     }) : {}),
 
-    inviteUser: (email, role) => set(state => ({
-        users: [...state.users, {
-            id: crypto.randomUUID(),
-            name: email.split('@')[0] || 'Invited User',
-            email,
-            role,
-            tenantId: state.currentOrganization?.id || 't1',
-            status: 'Invited'
-        }]
-    })),
+    inviteUser: async (email, role) => {
+        const currentUser = get().currentUser;
+        if (!currentUser?.tenantId) return;
 
-    updateUserRole: (userId, role) => set(state => ({
-        users: state.users.map(u => u.id === userId ? { ...u, role } : u)
-    })),
+        try {
+            // Create user in DB
+            const { data: newUser } = await client.models.User.create({
+                email,
+                name: email.split('@')[0], // Default name
+                role,
+                tenantId: currentUser.tenantId,
+                status: 'Invited'
+            });
 
-    removeUser: (userId) => set(state => ({
-        users: state.users.filter(u => u.id !== userId)
-    })),
+            if (newUser) {
+                const mappedUser: User = {
+                    id: newUser.id,
+                    email: newUser.email,
+                    name: newUser.name || '',
+                    role: (newUser.role as 'Admin' | 'Member'),
+                    tenantId: newUser.tenantId || '',
+                    status: 'Invited'
+                };
+                set(state => ({ users: [...state.users, mappedUser] }));
+            }
+        } catch (error) {
+            console.error("Failed to invite user:", error);
+        }
+    },
+
+    updateUserRole: async (userId, role) => {
+        try {
+            await client.models.User.update({
+                id: userId,
+                role
+            });
+            set(state => ({
+                users: state.users.map(u => u.id === userId ? { ...u, role } : u)
+            }));
+        } catch (error) {
+            console.error("Failed to update user role:", error);
+        }
+    },
+
+    removeUser: async (userId) => {
+        try {
+            await client.models.User.delete({ id: userId });
+            set(state => ({
+                users: state.users.filter(u => u.id !== userId)
+            }));
+        } catch (error) {
+            console.error("Failed to remove user:", error);
+        }
+    },
 
     createObjective: (name, ownerId, strategicValue, targetDate, outcomes) => set(state => {
 
