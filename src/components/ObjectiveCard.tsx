@@ -2,7 +2,7 @@
 import type { StrategicObjective } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Target, Briefcase, Layers, Minus } from 'lucide-react';
+import { Target, Briefcase, Layers } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
