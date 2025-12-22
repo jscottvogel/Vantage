@@ -225,123 +225,122 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                                 )}
                             </div>
                         </>
-            </>
-                ) : (
-                <form onSubmit={submitHeartbeat} className="space-y-6">
-                    <div className="flex items-center justify-between border-b pb-4">
-                        <h3 className="text-lg font-semibold">New Heartbeat</h3>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingHeartbeat(false)}>Cancel</Button>
-                    </div>
+                    ) : (
+                        <form onSubmit={submitHeartbeat} className="space-y-6">
+                            <div className="flex items-center justify-between border-b pb-4">
+                                <h3 className="text-lg font-semibold">New Heartbeat</h3>
+                                <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingHeartbeat(false)}>Cancel</Button>
+                            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Period Start</label>
-                            <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
-                                value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Period End</label>
-                            <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
-                                value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Health Signal</label>
-                        <div className="flex gap-4">
-                            {['green', 'yellow', 'red'].map((color) => (
-                                <label key={color} className="flex items-center gap-2 cursor-pointer border p-3 rounded-md has-[:checked]:bg-muted">
-                                    <input type="radio" name="health" value={color} checked={healthSignal === color} onChange={() => setHealthSignal(color as any)} />
-                                    <span className="capitalize font-medium">{color}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Indicators */}
-                    <div className="space-y-3 border p-4 rounded-md">
-                        <div className="flex justify-between">
-                            <label className="text-sm font-medium">Leading Indicators</label>
-                            <Button type="button" size="sm" variant="outline" onClick={handleAddIndicator}>Add Indicator</Button>
-                        </div>
-                        {indicators.map((ind, i) => (
-                            <div key={i} className="flex gap-2 items-end">
-                                <div className="flex-1">
-                                    <input placeholder="Name" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ind.name} onChange={e => updateIndicator(i, 'name', e.target.value)} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Period Start</label>
+                                    <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
+                                        value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
                                 </div>
-                                <div className="w-20">
-                                    <input type="number" placeholder="Val" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ind.value} onChange={e => updateIndicator(i, 'value', Number(e.target.value))} />
-                                </div>
-                                <div className="w-24">
-                                    <select className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ind.trend} onChange={e => updateIndicator(i, 'trend', e.target.value)}>
-                                        <option value="stable">Stable</option>
-                                        <option value="improving">Improving</option>
-                                        <option value="degrading">Degrading</option>
-                                    </select>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Period End</label>
+                                    <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
+                                        value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
                                 </div>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Evidence */}
-                    <div className="space-y-3 border p-4 rounded-md">
-                        <div className="flex justify-between">
-                            <label className="text-sm font-medium">Evidence</label>
-                            <Button type="button" size="sm" variant="outline" onClick={handleAddEvidence}>Add Evidence</Button>
-                        </div>
-                        {evidenceList.map((ev, i) => (
-                            <div key={i} className="flex gap-2 items-end">
-                                <div className="w-24">
-                                    <select className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ev.type} onChange={e => updateEvidence(i, 'type', e.target.value)}>
-                                        <option value="metric">Metric</option>
-                                        <option value="artifact">Artifact</option>
-                                    </select>
-                                </div>
-                                <div className="flex-1">
-                                    <input placeholder="Description" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ev.description} onChange={e => updateEvidence(i, 'description', e.target.value)} />
-                                </div>
-                                <div className="flex-1">
-                                    <input placeholder="Link" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                        value={ev.sourceLink} onChange={e => updateEvidence(i, 'sourceLink', e.target.value)} />
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Health Signal</label>
+                                <div className="flex gap-4">
+                                    {['green', 'yellow', 'red'].map((color) => (
+                                        <label key={color} className="flex items-center gap-2 cursor-pointer border p-3 rounded-md has-[:checked]:bg-muted">
+                                            <input type="radio" name="health" value={color} checked={healthSignal === color} onChange={() => setHealthSignal(color as any)} />
+                                            <span className="capitalize font-medium">{color}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Risks */}
-                    <div className="space-y-3 border p-4 rounded-md">
-                        <div className="flex justify-between">
-                            <label className="text-sm font-medium">Risks</label>
-                            <Button type="button" size="sm" variant="outline" onClick={handleAddRisk}>Add Risk</Button>
-                        </div>
-                        {risks.map((risk, i) => (
-                            <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                <input placeholder="Risk Description" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                    value={risk.description} onChange={e => updateRisk(i, 'description', e.target.value)} />
-                                <input placeholder="Mitigation" className="flex h-8 w-full rounded-md border px-2 text-sm"
-                                    value={risk.mitigation} onChange={e => updateRisk(i, 'mitigation', e.target.value)} />
+                            {/* Indicators */}
+                            <div className="space-y-3 border p-4 rounded-md">
+                                <div className="flex justify-between">
+                                    <label className="text-sm font-medium">Leading Indicators</label>
+                                    <Button type="button" size="sm" variant="outline" onClick={handleAddIndicator}>Add Indicator</Button>
+                                </div>
+                                {indicators.map((ind, i) => (
+                                    <div key={i} className="flex gap-2 items-end">
+                                        <div className="flex-1">
+                                            <input placeholder="Name" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ind.name} onChange={e => updateIndicator(i, 'name', e.target.value)} />
+                                        </div>
+                                        <div className="w-20">
+                                            <input type="number" placeholder="Val" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ind.value} onChange={e => updateIndicator(i, 'value', Number(e.target.value))} />
+                                        </div>
+                                        <div className="w-24">
+                                            <select className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ind.trend} onChange={e => updateIndicator(i, 'trend', e.target.value)}>
+                                                <option value="stable">Stable</option>
+                                                <option value="improving">Improving</option>
+                                                <option value="degrading">Degrading</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Confidence: {(confidence * 100).toFixed(0)}%</label>
-                        <input type="range" min="0" max="1" step="0.05" className="w-full"
-                            value={confidence} onChange={e => setConfidence(parseFloat(e.target.value))} />
-                    </div>
+                            {/* Evidence */}
+                            <div className="space-y-3 border p-4 rounded-md">
+                                <div className="flex justify-between">
+                                    <label className="text-sm font-medium">Evidence</label>
+                                    <Button type="button" size="sm" variant="outline" onClick={handleAddEvidence}>Add Evidence</Button>
+                                </div>
+                                {evidenceList.map((ev, i) => (
+                                    <div key={i} className="flex gap-2 items-end">
+                                        <div className="w-24">
+                                            <select className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ev.type} onChange={e => updateEvidence(i, 'type', e.target.value)}>
+                                                <option value="metric">Metric</option>
+                                                <option value="artifact">Artifact</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <input placeholder="Description" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ev.description} onChange={e => updateEvidence(i, 'description', e.target.value)} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input placeholder="Link" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                                value={ev.sourceLink} onChange={e => updateEvidence(i, 'sourceLink', e.target.value)} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
 
-                    <div className="pt-4 flex justify-end gap-2">
-                        <Button type="submit">Submit Signal</Button>
-                    </div>
-                </form>
+                            {/* Risks */}
+                            <div className="space-y-3 border p-4 rounded-md">
+                                <div className="flex justify-between">
+                                    <label className="text-sm font-medium">Risks</label>
+                                    <Button type="button" size="sm" variant="outline" onClick={handleAddRisk}>Add Risk</Button>
+                                </div>
+                                {risks.map((risk, i) => (
+                                    <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <input placeholder="Risk Description" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                            value={risk.description} onChange={e => updateRisk(i, 'description', e.target.value)} />
+                                        <input placeholder="Mitigation" className="flex h-8 w-full rounded-md border px-2 text-sm"
+                                            value={risk.mitigation} onChange={e => updateRisk(i, 'mitigation', e.target.value)} />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Confidence: {(confidence * 100).toFixed(0)}%</label>
+                                <input type="range" min="0" max="1" step="0.05" className="w-full"
+                                    value={confidence} onChange={e => setConfidence(parseFloat(e.target.value))} />
+                            </div>
+
+                            <div className="pt-4 flex justify-end gap-2">
+                                <Button type="submit">Submit Signal</Button>
+                            </div>
+                        </form>
                     )}
-            </CardContent>
-        </Card >
+                </CardContent>
+            </Card >
         </div >
     );
 }
