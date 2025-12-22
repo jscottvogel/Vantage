@@ -6,6 +6,14 @@ const schema = a.schema({
         success: a.boolean().required(),
         message: a.string(),
     }),
+    User: a.model({
+        email: a.string().required(),
+        name: a.string(),
+        role: a.string(),
+        tenantId: a.string(),
+        status: a.string(),
+    })
+        .authorization(allow => [allow.owner(), allow.authenticated()]), // Allow authenticated for now to simplify team visibility
     sendHeartbeatNotification: a
         .mutation()
         .arguments({

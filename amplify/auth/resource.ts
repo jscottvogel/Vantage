@@ -8,7 +8,4 @@ export const auth = defineAuth({
     triggers: {
         preSignUp,
     },
-    triggers: {
-        preSignUp,
-    },
 });
