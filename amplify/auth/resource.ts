@@ -8,4 +8,18 @@ export const auth = defineAuth({
     triggers: {
         preSignUp,
     },
+    userAttributes: {
+        "custom:role": {
+            dataType: "String",
+            mutable: true,
+        },
+        "custom:tenant_id": {
+            dataType: "String",
+            mutable: true,
+        },
+        "custom:org_name": {
+            dataType: "String",
+            mutable: true,
+        },
+    },
 });
