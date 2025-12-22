@@ -8,7 +8,7 @@ import { ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
 export function LoginPage() {
     const [step, setStep] = useState<'email' | 'password'>('email');
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('password123'); // Dev default
+    const [password, setPassword] = useState('');
     const [simulatedOrg, setSimulatedOrg] = useState<string | null>(null);
     const { login, isLoading, authError } = useStore();
 
@@ -85,7 +85,6 @@ export function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     autoFocus
                                 />
-                                <p className="text-xs text-muted-foreground">Dev Default: password123</p>
                             </div>
 
                             {authError && (

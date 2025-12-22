@@ -52,18 +52,19 @@ interface AppState {
                 initiatives: { name: string; ownerId: string; link?: string }[];
             }[];
         }[]
+    ) => Promise<void>;
 
-        updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
+    updateObjectiveStatus: (id: string, status: OutcomeStatus) => void;
 
-        addHeartbeat: (targetId: string, targetType: 'objective' | 'kr' | 'initiative', heartbeat: Heartbeat) => Promise<void>;
+    addHeartbeat: (targetId: string, targetType: 'objective' | 'kr' | 'initiative', heartbeat: Heartbeat) => Promise<void>;
 
-        addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => void;
-        updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => void;
-        removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => void;
+    addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => void;
+    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => void;
+    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => void;
 
-        addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => void;
-        updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => void;
-        removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => void;
+    addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => void;
+    updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => void;
+    removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => void;
 }
 
 // Initial Mock Data
@@ -139,6 +140,26 @@ export const useStore = create<AppState>((set, get) => ({
                     }
                 }
 
+                // Fetch Organization Details
+                let activeOrg = get().currentOrganization; // Fallback
+                if (user.tenantId) {
+                    try {
+                        const { data: orgData } = await client.models.Organization.get({ id: user.tenantId });
+                        if (orgData) {
+                            activeOrg = {
+                                id: orgData.id,
+                                name: orgData.name,
+                                subscriptionTier: (orgData.subscriptionTier as any) || 'Free',
+                                domain: orgData.domain || undefined,
+                                createdAt: orgData.createdAt,
+                                updatedAt: orgData.updatedAt
+                            };
+                        }
+                    } catch (err) {
+                        console.error("Failed to load organization:", err);
+                    }
+                }
+
                 // Fetch Objectives with nested relations
                 const { data: objList } = await client.models.StrategicObjective.list({
                     filter: { tenantId: { eq: user.tenantId } },
@@ -162,7 +183,7 @@ export const useStore = create<AppState>((set, get) => ({
                 // Note: The selectionSet returns flat arrays or nested objects depending on client version, 
                 // but Gen 2 strongly typed client usually maps to object structure.
                 // We'll cast to StrategicObjective[] for state compatibility.
-                set({ currentUser: user, users: team, objectives: objList as unknown as StrategicObjective[], isLoading: false });
+                set({ currentUser: user, users: team, currentOrganization: activeOrg, objectives: objList as unknown as StrategicObjective[], isLoading: false });
             } else {
                 set({ currentUser: user, users: team, isLoading: false });
             }
@@ -187,7 +208,7 @@ export const useStore = create<AppState>((set, get) => ({
     logout: async () => {
         set({ isLoading: true });
         await AuthService.signOut();
-        set({ currentUser: null, isLoading: false });
+        set({ currentUser: null, objectives: [], users: [], isLoading: false });
     },
 
     signupOrganization: async (orgName, adminEmail, adminName, password = 'password123') => {
@@ -201,7 +222,20 @@ export const useStore = create<AppState>((set, get) => ({
                 const user = await AuthService.getCurrentUser();
 
                 if (user) {
-                    // Persist Admin User to Data Store
+                    // 1. Create Organization Record
+                    try {
+                        await client.models.Organization.create({
+                            id: user.tenantId, // IMPORTANT: Match tenantId
+                            name: orgName,
+                            subscriptionTier: 'Free',
+                            domain: adminEmail.split('@')[1]
+                        });
+                    } catch (orgErr) {
+                        console.error("Failed to persist organization details:", orgErr);
+                        // Non-fatal? We still want to log them in. 
+                    }
+
+                    // 2. Persist Admin User to Data Store
                     await client.models.User.create({
                         email: user.email,
                         name: user.name,
@@ -211,7 +245,7 @@ export const useStore = create<AppState>((set, get) => ({
                     });
                 }
 
-                // create org in local state too? 
+                // create org in local state too 
                 const newOrg: Organization = {
                     id: user?.tenantId || crypto.randomUUID(),
                     name: orgName,

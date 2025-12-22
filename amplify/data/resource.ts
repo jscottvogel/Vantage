@@ -11,9 +11,18 @@ const schema = a.schema({
         name: a.string(),
         role: a.string(),
         tenantId: a.string(),
+        tenantId: a.string(),
         status: a.string(),
     })
         .authorization(allow => [allow.owner(), allow.authenticated()]),
+
+    Organization: a.model({
+        name: a.string().required(),
+        subscriptionTier: a.string(),
+        domain: a.string(),
+        // We will use the 'id' of this model as the tenantId
+    })
+        .authorization(allow => [allow.authenticated()]), // Any auth user can read (we filter by ID in app)
 
     // Custom Type for Schedules
     CadenceSchedule: a.customType({
