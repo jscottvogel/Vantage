@@ -97,7 +97,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                 attestedOn: new Date().toISOString().split('T')[0]
             }
         };
-        store.addHeartbeat(objectiveId, initiativeId, newHeartbeat);
+        store.addHeartbeat(initiativeId, 'initiative', newHeartbeat);
         setIsAddingHeartbeat(false);
         // Reset form?
     };

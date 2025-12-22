@@ -6,7 +6,7 @@ import { X, Target, Briefcase, Layers, ArrowRight, Activity, TrendingUp, Trendin
 import { Button } from './ui/button';
 import { KeyResultHeartbeatDialog } from './KeyResultHeartbeatDialog';
 import { NotificationService } from '../services/notification';
-import type { KeyResultHeartbeat, Initiative, KeyResult, CadenceSchedule } from '../types';
+import type { Heartbeat, Initiative, KeyResult, CadenceSchedule } from '../types';
 
 const formatCadence = (schedule: CadenceSchedule | string) => {
     if (typeof schedule === 'string') return schedule;
@@ -106,44 +106,19 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
         // }
     };
 
-    const getLatestHeartbeat = (heartbeats: KeyResultHeartbeat[]) => {
+    const getLatestHeartbeat = (heartbeats: Heartbeat[]) => {
         if (!heartbeats || heartbeats.length === 0) return null;
-        return heartbeats[heartbeats.length - 1];
+        // Sort by periodEnd desc
+        return [...heartbeats].sort((a, b) => new Date(b.periodEnd).getTime() - new Date(a.periodEnd).getTime())[0];
     };
 
-    const trendIcon = (trend: string) => {
-        switch (trend) {
-            case 'Improving': return <TrendingUp className="w-3 h-3 text-green-600" />;
-            case 'Declining': return <TrendingDown className="w-3 h-3 text-red-600" />;
-            default: return <Minus className="w-3 h-3 text-gray-400" />;
+    const healthIcon = (signal: string) => {
+        switch (signal) {
+            case 'green': return <div className="w-3 h-3 rounded-full bg-green-500" />;
+            case 'yellow': return <div className="w-3 h-3 rounded-full bg-amber-500" />;
+            case 'red': return <div className="w-3 h-3 rounded-full bg-red-500" />;
+            default: return <div className="w-3 h-3 rounded-full bg-gray-300" />;
         }
-    };
-
-    const handleAddInitiative = (krId: string) => {
-        if (!newInitName.trim()) return;
-
-        const newInitiative: Initiative = {
-            id: crypto.randomUUID(),
-            name: newInitName,
-            // Default values
-            ownerId: newInitOwnerId || store.currentUser?.id || 'Unassigned',
-            status: 'active',
-            startDate: new Date().toISOString(),
-            targetEndDate: objective.targetDate,
-            heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
-            supportedKeyResults: [],
-            heartbeats: []
-        };
-
-        store.addInitiative(objectiveId, krId, newInitiative);
-        setAddingToKR(null);
-        setNewInitName('');
-        setNewInitOwnerId(store.currentUser?.id || store.users[0]?.id || '');
-    };
-
-    const handleDeleteInitiative = (krId: string, initId: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        store.removeInitiative(objectiveId, krId, initId);
     };
 
     return (
@@ -285,24 +260,19 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                             {latestHB && (
                                                 <div className="ml-6 mb-4 p-3 bg-slate-50 border rounded-md text-sm space-y-2">
                                                     <div className="flex items-center gap-2">
-                                                        <Badge variant={latestHB.overallConfidence === 'High' ? 'default' : latestHB.overallConfidence === 'Medium' ? 'secondary' : 'destructive'} className="rounded-sm">
-                                                            Confidence: {latestHB.overallConfidence}
+                                                        {healthIcon(latestHB.healthSignal)}
+                                                        <Badge variant={latestHB.confidence === 'High' ? 'default' : latestHB.confidence === 'Medium' ? 'secondary' : 'destructive'} className="rounded-sm">
+                                                            Confidence: {latestHB.confidence || 'N/A'}
                                                         </Badge>
-                                                        <div className="flex items-center text-xs text-muted-foreground">
-                                                            {trendIcon(latestHB.confidenceTrend)}
-                                                            <span className="ml-1">{latestHB.confidenceTrend}</span>
-                                                        </div>
                                                         <span className="text-xs text-muted-foreground border-l pl-2">
-                                                            {new Date(latestHB.timestamp).toLocaleDateString()}
+                                                            {new Date(latestHB.periodEnd).toLocaleDateString()}
                                                         </span>
                                                     </div>
-                                                    <p className="text-muted-foreground italic text-xs">"{latestHB.heartbeatSummary}"</p>
-                                                    {latestHB.confidenceDrivers.length > 0 && (
+                                                    <p className="text-muted-foreground italic text-xs line-clamp-2">"{latestHB.narrative}"</p>
+                                                    {latestHB.risks && latestHB.risks.length > 0 && (
                                                         <div className="text-xs flex gap-1 flex-wrap">
-                                                            <span className="font-semibold text-green-700">Drivers:</span>
-                                                            {latestHB.confidenceDrivers.slice(0, 2).map((d, i) => (
-                                                                <span key={i} className="bg-green-50 text-green-700 px-1 py-0.5 rounded border border-green-100">{d}</span>
-                                                            ))}
+                                                            <span className="font-semibold text-red-700">Risks:</span>
+                                                            <span className="text-red-700">{latestHB.risks.length} identified</span>
                                                         </div>
                                                     )}
                                                 </div>

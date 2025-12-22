@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import type { KeyResultHeartbeat, HeartbeatLink, Confidence, ConfidenceTrend } from '../types';
+import type { Heartbeat, ConfidenceLevel, Risk } from '../types';
 
 interface KeyResultHeartbeatDialogProps {
     objectiveId: string;
@@ -31,12 +31,10 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
     // (Actually a KR has direct initiatives, so we can just use those)
     const availableInitiatives = keyResult ? keyResult.initiatives : [];
 
-    const [overallConfidence, setOverallConfidence] = useState<Confidence>('Medium');
-    const [confidenceTrend, setConfidenceTrend] = useState<ConfidenceTrend>('Stable');
+    const [overallConfidence, setOverallConfidence] = useState<ConfidenceLevel>('Medium');
+    const [confidenceTrend, setConfidenceTrend] = useState<'Improving' | 'Stable' | 'Declining'>('Stable');
 
-    const [primaryLinks, setPrimaryLinks] = useState<HeartbeatLink[]>([]);
-
-    // Multi-value text fields
+    // Multi-value text fields (Mapping these to Narrative now)
     const [confidenceDrivers, setConfidenceDrivers] = useState<string[]>(['']);
     const [riskDrivers, setRiskDrivers] = useState<string[]>(['']);
     const [knownUnknowns, setKnownUnknowns] = useState<string[]>(['']);
@@ -47,21 +45,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
 
     if (!keyResult) return null;
 
-    const handleAddLink = (initId: string) => {
-        if (!primaryLinks.find(pl => pl.initiativeId === initId)) {
-            setPrimaryLinks([...primaryLinks, { initiativeId: initId, influenceLevel: 'Primary' }]);
-        }
-    };
-
-    const handleRemoveLink = (initId: string) => {
-        setPrimaryLinks(primaryLinks.filter(pl => pl.initiativeId !== initId));
-    };
-
-    const updateLinkLevel = (initId: string, level: 'Primary' | 'Supporting') => {
-        setPrimaryLinks(primaryLinks.map(pl => pl.initiativeId === initId ? { ...pl, influenceLevel: level } : pl));
-    };
-
-    // Helper for string arrays
+    // Helper for string arrays (reused)
     const updateArray = (setter: any, arr: string[], index: number, val: string) => {
         const newArr = [...arr];
         newArr[index] = val;
@@ -79,24 +63,52 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
         const cleanUnknowns = knownUnknowns.filter(s => s.trim());
         const cleanGaps = gaps.filter(s => s.trim());
 
-        const newHeartbeat: KeyResultHeartbeat = {
-            id: `KRHB-${new Date().toISOString().split('T')[0]}`,
+        // Map rich fields to Narrative since Schema was simplified
+        let fullNarrative = summary + "\n\n";
+
+        if (cleanConf.length > 0) {
+            fullNarrative += "Confidence Drivers:\n" + cleanConf.map(s => `- ${s}`).join('\n') + "\n\n";
+        }
+        if (cleanUnknowns.length > 0) {
+            fullNarrative += "Known Unknowns:\n" + cleanUnknowns.map(s => `- ${s}`).join('\n') + "\n\n";
+        }
+        if (cleanGaps.length > 0) {
+            fullNarrative += "Information Gaps:\n" + cleanGaps.map(s => `- ${s}`).join('\n') + "\n\n";
+        }
+        if (limitations) {
+            fullNarrative += `Limitations: ${limitations}\n`;
+        }
+
+        // Map Risk Drivers to proper Risk objects
+        const risks: Risk[] = cleanRisk.map(r => ({
+            description: r,
+            severity: 'medium', // Default
+            mitigation: 'Identified in heartbeat'
+        }));
+
+        const newHeartbeat: Heartbeat = {
+            id: `HB-${new Date().toISOString()}`,
             keyResultId,
-            keyResultStatement: keyResult.description,
-            timestamp: new Date().toISOString(),
-            overallConfidence,
-            confidenceTrend,
-            primaryInitiatives: primaryLinks,
-            confidenceDrivers: cleanConf,
-            riskDrivers: cleanRisk,
-            knownUnknowns: cleanUnknowns,
-            informationGaps: cleanGaps,
-            confidenceLimitations: limitations,
-            heartbeatSummary: summary,
-            sourceInitiativeHeartbeatIds: [] // Todo linking
+            periodStart: new Date().toISOString(), // Immediate
+            periodEnd: new Date().toISOString(),
+            healthSignal: overallConfidence === 'High' ? 'green' : overallConfidence === 'Medium' ? 'yellow' : 'red', // Map confidence to signal
+            confidence: overallConfidence,
+
+            narrative: fullNarrative.trim(),
+
+            risks: risks,
+
+            // Default empty for now
+            leadingIndicators: [],
+            evidence: [],
+
+            ownerAttestation: {
+                attestedBy: store.currentUser?.name || "User",
+                attestedOn: new Date().toISOString()
+            }
         };
 
-        store.addKeyResultHeartbeat(objectiveId, keyResultId, newHeartbeat);
+        store.addHeartbeat(keyResultId, 'kr', newHeartbeat);
         onClose();
     };
 
@@ -124,7 +136,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                                         <button
                                             key={c}
                                             type="button"
-                                            onClick={() => setOverallConfidence(c as Confidence)}
+                                            onClick={() => setOverallConfidence(c as ConfidenceLevel)}
                                             className={`flex-1 py-2 px-4 rounded-md border text-sm font-medium transition-colors ${overallConfidence === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
                                         >
                                             {c}
@@ -143,7 +155,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                                         <button
                                             key={opt.val}
                                             type="button"
-                                            onClick={() => setConfidenceTrend(opt.val as ConfidenceTrend)}
+                                            onClick={() => setConfidenceTrend(opt.val as any)}
                                             className={`flex-1 py-2 px-2 rounded-md border text-sm font-medium flex flex-col items-center justify-center transition-colors ${confidenceTrend === opt.val ? 'bg-primary/10 border-primary text-primary' : 'bg-background hover:bg-muted'}`}
                                         >
                                             {opt.icon}
@@ -234,42 +246,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                         </div>
 
                         {/* Section 5: Primary Initiatives */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium">Contributing Initiatives</label>
 
-                            <div className="flex gap-2 flex-wrap">
-                                {availableInitiatives.map((init: any) => (
-                                    <div
-                                        key={init.id}
-                                        onClick={() => primaryLinks.find(pl => pl.initiativeId === init.id) ? handleRemoveLink(init.id) : handleAddLink(init.id)}
-                                        className={`cursor-pointer px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${primaryLinks.find(pl => pl.initiativeId === init.id) ? 'bg-indigo-100 border-indigo-300 text-indigo-800 ring-1 ring-indigo-300' : 'bg-background hover:border-gray-400'}`}
-                                    >
-                                        {init.name}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {primaryLinks.length > 0 && (
-                                <div className="bg-muted/30 p-3 rounded-md space-y-2">
-                                    {primaryLinks.map((link) => {
-                                        const initName = availableInitiatives.find((AI: any) => AI.id === link.initiativeId)?.name;
-                                        return (
-                                            <div key={link.initiativeId} className="flex items-center justify-between text-sm">
-                                                <span>{initName}</span>
-                                                <select
-                                                    className="h-8 rounded-md border text-xs px-2"
-                                                    value={link.influenceLevel}
-                                                    onChange={e => updateLinkLevel(link.initiativeId, e.target.value as any)}
-                                                >
-                                                    <option value="Primary">Primary</option>
-                                                    <option value="Supporting">Supporting</option>
-                                                </select>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
 
                         <div className="pt-4 flex justify-end gap-2 border-t">
                             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
