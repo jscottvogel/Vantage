@@ -101,6 +101,7 @@ export const useStore = create<AppState>((set, get) => ({
                 });
 
                 // Map DB records to User type (ensure role is cast correctly)
+                // Map DB records to User type (ensure role is cast correctly)
                 team = userRecords.map(r => ({
                     id: r.id,
                     email: r.email,
@@ -109,6 +110,34 @@ export const useStore = create<AppState>((set, get) => ({
                     tenantId: r.tenantId || '',
                     status: (r.status as 'Active' | 'Invited') || 'Active'
                 }));
+
+                // Self-healing: If current user is not in the DB (e.g. first login after verification), create them.
+                const currentUserInDb = team.find(u => u.email === user.email);
+                if (!currentUserInDb) {
+                    try {
+                        const { data: newUser } = await client.models.User.create({
+                            email: user.email,
+                            name: user.name,
+                            role: user.role,
+                            tenantId: user.tenantId,
+                            status: 'Active'
+                        });
+
+                        if (newUser) {
+                            const mappedNewUser: User = {
+                                id: newUser.id,
+                                email: newUser.email,
+                                name: newUser.name || '',
+                                role: (newUser.role as 'Admin' | 'Member'),
+                                tenantId: newUser.tenantId || '',
+                                status: 'Active'
+                            };
+                            team.push(mappedNewUser);
+                        }
+                    } catch (err) {
+                        console.error("Failed to auto-create user record:", err);
+                    }
+                }
 
                 // Fetch Objectives with nested relations
                 const { data: objList } = await client.models.StrategicObjective.list({
@@ -147,8 +176,8 @@ export const useStore = create<AppState>((set, get) => ({
         set({ isLoading: true, authError: null });
         try {
             await AuthService.signInWithPassword(email, password);
-            const user = await AuthService.getCurrentUser();
-            set({ currentUser: user, isLoading: false });
+            // After login, we must load the session data (user, objectives, etc)
+            await get().checkSession();
         } catch (e: any) {
             console.error("Login failed:", e);
             set({ isLoading: false, authError: e.message || "Login failed" });
