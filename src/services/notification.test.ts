@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationService } from './notification';
-import * as AmplifyData from 'aws-amplify/data';
 
 // Mock the Amplify Data client generation
 const { mockMutate } = vi.hoisted(() => {
