@@ -145,9 +145,18 @@ export const useStore = create<AppState>((set) => ({
 
         } catch (e: any) {
             console.error("Signup failed:", e);
-            // Try to extract useful message from AWS error
-            const msg = e.message || (typeof e === 'string' ? e : JSON.stringify(e));
-            set({ isLoading: false, authError: `Signup failed: ${msg}` });
+            let msg = e.message || "An unexpected error occurred.";
+
+            // Map AWS Cognito errors to user-friendly messages
+            if (e.name === 'InvalidPasswordException') {
+                msg = "Password does not meet requirements. It must contain at least 8 characters, numbers, mixed case, and symbols.";
+            } else if (e.name === 'UsernameExistsException') {
+                msg = "An account with this email already exists.";
+            } else if (e.name === 'CodeDeliveryFailureException') {
+                msg = "Failed to send verification email. Please check the email address.";
+            }
+
+            set({ isLoading: false, authError: msg });
         }
     },
 

@@ -107,7 +107,7 @@ export function OrganizationSignUp() {
                             </div>
 
                             {authError && (
-                                <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm font-medium border border-destructive/20">
+                                <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm font-medium border border-red-200">
                                     {authError}
                                 </div>
                             )}
