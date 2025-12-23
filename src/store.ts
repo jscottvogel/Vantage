@@ -158,9 +158,30 @@ export const useStore = create<AppState>((set, get) => ({
                                 createdAt: orgData.createdAt,
                                 updatedAt: orgData.updatedAt
                             };
+                        } else {
+                            // Auto-create Organization if missing (First Login)
+                            const orgName = (user as any).orgName;
+                            if (orgName) {
+                                console.log("Organization record missing. Auto-creating for:", orgName);
+                                const { data: newOrg } = await client.models.Organization.create({
+                                    id: user.tenantId,
+                                    name: orgName,
+                                    subscriptionTier: 'Free'
+                                });
+
+                                if (newOrg) {
+                                    activeOrg = {
+                                        id: newOrg.id,
+                                        name: newOrg.name,
+                                        subscriptionTier: 'Free',
+                                        createdAt: newOrg.createdAt,
+                                        updatedAt: newOrg.updatedAt
+                                    };
+                                }
+                            }
                         }
                     } catch (err) {
-                        console.error("Failed to load organization:", err);
+                        console.error("Failed to load or create organization:", err);
                     }
                 }
 

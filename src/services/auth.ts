@@ -22,8 +22,10 @@ export const AuthService = {
                 name: attributes.name || attributes.email?.split('@')[0] || 'User',
                 role: (attributes.profile as 'Admin' | 'Member') || 'Member',
                 tenantId: attributes.locale || '',
-                status: 'Active'
-            };
+                status: 'Active',
+                // Temporary field to help with Org Auto-Creation on first login
+                orgName: attributes.nickname
+            } as User & { orgName?: string };
         } catch (error) {
             // No current user session found
             return null;

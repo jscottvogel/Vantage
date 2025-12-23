@@ -99,12 +99,12 @@ export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
                                         return (
 
                                             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                                <div className={`w-10 h-10 rounded-full ${krHealthColor}`} title={`Health: ${latestKRHeartbeat.healthSignal}`} />
-                                                <span className="text-[20px] font-bold text-muted-foreground border px-2 py-1 rounded">
+                                                <div className={`w-5 h-5 rounded-full ${krHealthColor}`} title={`Health: ${latestKRHeartbeat.healthSignal}`} />
+                                                <span className="text-[14px] font-bold text-muted-foreground border px-1.5 py-0.5 rounded">
                                                     {latestKRHeartbeat.confidence?.substring(0, 1) || '-'}
                                                 </span>
                                                 {hasRisks && (
-                                                    <AlertTriangle className="w-12 h-12 text-amber-600" />
+                                                    <AlertTriangle className="w-6 h-6 text-amber-600" />
                                                 )}
                                             </div>
                                         );
