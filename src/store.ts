@@ -90,6 +90,13 @@ export const useStore = create<AppState>((set, get) => ({
         try {
             const user = await AuthService.getCurrentUser();
 
+            // Safety check for Amplify models
+            if (!client.models.User || !client.models.StrategicObjective) {
+                console.warn("Amplify models not found. Ensure amplify_outputs.json is up to date and backend is deployed.");
+                set({ currentUser: user, users: [], isLoading: false });
+                return;
+            }
+
             // Fetch users for the tenant
             let team: User[] = [];
             if (user?.tenantId) {
@@ -136,7 +143,7 @@ export const useStore = create<AppState>((set, get) => ({
 
                 // Fetch Organization Details
                 let activeOrg = get().currentOrganization;
-                if (user.tenantId) {
+                if (user.tenantId && client.models.Organization) {
                     try {
                         const { data: orgData } = await client.models.Organization.get({ id: user.tenantId });
                         if (orgData) {
