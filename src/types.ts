@@ -61,7 +61,7 @@ export interface Initiative {
     startDate: string;
     targetEndDate: string;
     heartbeatCadence: HeartbeatCadence;
-    supportedKeyResults: SupportedKeyResult[];
+    supportedKeyResults?: SupportedKeyResult[];
     heartbeats: Heartbeat[];
     link?: string;
 }

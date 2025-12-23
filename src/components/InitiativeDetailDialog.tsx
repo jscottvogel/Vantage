@@ -144,7 +144,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                         )}
                     </CardTitle>
                     <CardDescription className="flex gap-4">
-                        <span>Has {initiative.supportedKeyResults.length} supported KRs</span>
+                        <span>Has {initiative.supportedKeyResults?.length || 0} supported KRs</span>
                         <span>Cadence: {formatCadence(initiative.heartbeatCadence)}</span>
                     </CardDescription>
                 </CardHeader>
