@@ -28,6 +28,9 @@ interface AppState {
     confirmSignUp: (email: string, code: string) => Promise<void>;
     updateOrganization: (updates: Partial<Organization>) => void;
 
+    resetPassword: (email: string) => Promise<void>;
+    confirmNewPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+
     inviteUser: (email: string, role: 'Admin' | 'Member') => void;
     updateUserRole: (userId: string, role: 'Admin' | 'Member') => void;
     removeUser: (userId: string) => void;
@@ -256,8 +259,32 @@ export const useStore = create<AppState>((set, get) => ({
             await AuthService.confirmSignUp(email, code);
             set({ isLoading: false });
         } catch (e: any) {
-            console.error("Confirmation failed:", e);
-            set({ isLoading: false, authError: e.message || "Invalid code" });
+            console.error("Confirm signup failed:", e);
+            set({ isLoading: false, authError: e.message || "Invalid verification code." });
+            throw e;
+        }
+    },
+
+    resetPassword: async (email: string) => {
+        set({ isLoading: true, authError: null });
+        try {
+            await AuthService.resetPassword(email);
+            set({ isLoading: false });
+        } catch (e: any) {
+            console.error("Reset password failed:", e);
+            set({ isLoading: false, authError: e.message || "Failed to send reset code." });
+            throw e;
+        }
+    },
+
+    confirmNewPassword: async (email: string, code: string, newPassword: string) => {
+        set({ isLoading: true, authError: null });
+        try {
+            await AuthService.confirmResetPassword(email, code, newPassword);
+            set({ isLoading: false });
+        } catch (e: any) {
+            console.error("Confirm new password failed:", e);
+            set({ isLoading: false, authError: e.message || "Failed to reset password." });
             throw e;
         }
     },

@@ -1,4 +1,4 @@
-import { signIn, signUp, signOut, confirmSignUp, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import { signIn, signUp, signOut, confirmSignUp, getCurrentUser, fetchUserAttributes, resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import type { User } from '../types';
 
 /**
@@ -91,5 +91,23 @@ export const AuthService = {
      */
     async confirmSignUp(username: string, confirmationCode: string) {
         return await confirmSignUp({ username, confirmationCode });
+    },
+
+    /**
+     * Initiates the password reset flow for a user.
+     * @param username The user's email address.
+     */
+    async resetPassword(username: string) {
+        return await resetPassword({ username });
+    },
+
+    /**
+     * Confirms the password reset with the code and new password.
+     * @param username The user's email address.
+     * @param confirmationCode The code sent to the user.
+     * @param newPassword The new password.
+     */
+    async confirmResetPassword(username: string, confirmationCode: string, newPassword: string) {
+        return await confirmResetPassword({ username, confirmationCode, newPassword });
     }
 };
