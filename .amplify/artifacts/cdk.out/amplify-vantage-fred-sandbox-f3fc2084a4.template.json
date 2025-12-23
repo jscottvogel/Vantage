@@ -33,6 +33,12 @@
     "groups"
    ]
   },
+  "AWS::Amplify::Function": {
+   "version": "1",
+   "stackOutputs": [
+    "definedFunctions"
+   ]
+  },
   "AWS::Amplify::GraphQL": {
    "version": "1",
    "stackOutputs": [
@@ -42,12 +48,6 @@
     "awsAppsyncRegion",
     "amplifyApiModelSchemaS3Uri",
     "awsAppsyncAdditionalAuthenticationTypes"
-   ]
-  },
-  "AWS::Amplify::Function": {
-   "version": "1",
-   "stackOutputs": [
-    "definedFunctions"
    ]
   }
  },
@@ -142,6 +142,37 @@
   "groups": {
    "Value": "[]"
   },
+  "definedFunctions": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "[\"",
+      {
+       "Fn::GetAtt": [
+        "function1351588B",
+        "Outputs.amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Ref"
+       ]
+      },
+      "\",\"",
+      {
+       "Fn::GetAtt": [
+        "function1351588B",
+        "Outputs.amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref"
+       ]
+      },
+      "\",\"",
+      {
+       "Fn::GetAtt": [
+        "function1351588B",
+        "Outputs.amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref"
+       ]
+      },
+      "\"]"
+     ]
+    ]
+   }
+  },
   "awsAppsyncApiId": {
    "Value": {
     "Fn::GetAtt": [
@@ -205,30 +236,6 @@
   },
   "awsAppsyncAdditionalAuthenticationTypes": {
    "Value": "AWS_IAM"
-  },
-  "definedFunctions": {
-   "Value": {
-    "Fn::Join": [
-     "",
-     [
-      "[\"",
-      {
-       "Fn::GetAtt": [
-        "function1351588B",
-        "Outputs.amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref"
-       ]
-      },
-      "\",\"",
-      {
-       "Fn::GetAtt": [
-        "function1351588B",
-        "Outputs.amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref"
-       ]
-      },
-      "\"]"
-     ]
-    ]
-   }
   }
  },
  "Resources": {
@@ -301,6 +308,12 @@
        "auth179371D7",
        "Outputs.amplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
       ]
+     },
+     "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": {
+      "Fn::GetAtt": [
+       "function1351588B",
+       "Outputs.amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+      ]
      }
     },
     "Tags": [
@@ -329,7 +342,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/6204147976fbc145ad6757e6cfedd2defc297648f25e36efa4fe2eb4add7dfd0.json"
+       "/67e24b956dc6566f2a70cb22d230949a64db044b4067bfd1da597ea738bb395d.json"
       ]
      ]
     }
@@ -385,7 +398,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/9e9b99ecdb4dffd6b6bac6937859cb4fc34d84bf7b977b6497548fe88240fb3d.json"
+       "/9c03a0af7a0b818eecfe68492a9c0d722e96b18c696a73769e9a0d0636962f5d.json"
       ]
      ]
     }

@@ -1,6 +1,143 @@
 {
  "Description": "{\"createdOn\":\"Linux\",\"createdBy\":\"AmplifySandbox\",\"createdWith\":\"1.15.2\",\"stackType\":\"function-Lambda\",\"metadata\":{}}",
  "Resources": {
+  "sendnotificationlambdaServiceRoleFCF78BDB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "send-notification"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/Resource"
+   }
+  },
+  "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C",
+    "Roles": [
+     {
+      "Ref": "sendnotificationlambdaServiceRoleFCF78BDB"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "sendnotificationlambdaD10EB6D8": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "x86_64"
+    ],
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "8ab95ad4a9c7132fcf84aead2ae96eade0e1acacd01d94497e017b44b26f2030.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AMPLIFY_SSM_ENV_CONFIG": "{}"
+     }
+    },
+    "EphemeralStorage": {
+     "Size": 512
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "sendnotificationlambdaServiceRoleFCF78BDB",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "send-notification"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ],
+    "Timeout": 3
+   },
+   "DependsOn": [
+    "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C",
+    "sendnotificationlambdaServiceRoleFCF78BDB"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/Resource",
+    "aws:asset:path": "asset.8ab95ad4a9c7132fcf84aead2ae96eade0e1acacd01d94497e017b44b26f2030",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
   "presignuplambdaServiceRole1120074C": {
    "Type": "AWS::IAM::Role",
    "Properties": {
@@ -586,15 +723,20 @@
    ]
   }
  },
- "Parameters": {
-  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A": {
-   "Type": "String"
-  },
-  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90": {
-   "Type": "String"
-  }
- },
  "Outputs": {
+  "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "sendnotificationlambdaD10EB6D8",
+     "Arn"
+    ]
+   }
+  },
+  "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Ref": {
+   "Value": {
+    "Ref": "sendnotificationlambdaD10EB6D8"
+   }
+  },
   "amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref": {
    "Value": {
     "Ref": "presignuplambdaE72B81B3"
@@ -604,6 +746,14 @@
    "Value": {
     "Ref": "postconfirmationlambda195D98D2"
    }
+  }
+ },
+ "Parameters": {
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90": {
+   "Type": "String"
   }
  }
 }

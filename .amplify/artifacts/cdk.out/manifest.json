@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e9a701e5d8aaf2a3895bdb57f5e590196068ed1565e9d5319254f2633a7be0d1.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/0aa02eabc6f0f76ee299c091780b2a6be256652fd8874fcc602ccb23802f619d.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -4123,6 +4123,124 @@
             "data": "amplifyDataHeartbeatNestedStackHeartbeatNestedStackResourceB2B24C12"
           }
         ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/HasEnvironmentParameter": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HasEnvironmentParameter"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "FnSendHeartbeatNotificationLambdaDataSource"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleAB85CAE1"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnSendHeartbeatNotificationLambdaDataSourceServiceRoleDefaultPolicyBE832926"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/FnSendHeartbeatNotificationLambdaDataSource/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnSendHeartbeatNotificationLambdaDataSource"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "FnSendHeartbeatNotificationLambdaDataSource"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/InvokeFnSendHeartbeatNotificationLambdaDataSource/InvokeFnSendHeartbeatNotificationLambdaDataSource.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InvokeFnSendHeartbeatNotificationLambdaDataSourceInvokeFnSendHeartbeatNotificationLambdaDataSourceAppSyncFunctionF45C19CC"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "InvokeFnSendHeartbeatNotificationLambdaDataSource"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/mutationSendHeartbeatNotificationResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationsendHeartbeatNotificationResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.sendHeartbeatNotification"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/MutationSendHeartbeatNotificationAuthFN/MutationSendHeartbeatNotificationAuthFN.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationSendHeartbeatNotificationAuthFNMutationSendHeartbeatNotificationAuthFNAppSyncFunction24B4095C"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationSendHeartbeatNotificationAuthFN"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputs.amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputs.amplifyvantagefredsandboxf3fc2084a4authamplifyAuthauthenticatedUserRole4EDA16FBRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthauthenticatedUserRole4EDA16FBRef"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputs.amplifyvantagefredsandboxf3fc2084a4authamplifyAuthunauthenticatedUserRoleD8E10D4ARef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthunauthenticatedUserRoleD8E10D4ARef"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputs.amplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack/reference-to-amplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPINONEDSE04017B7Name": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPINONEDSE04017B7Name"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/FunctionDirectiveStack.NestedStack/FunctionDirectiveStack.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyDataFunctionDirectiveStackNestedStackFunctionDirectiveStackNestedStackResource1246A302"
+          }
+        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/ConnectionStack/StrategicObjectiveoutcomesauth0Function/StrategicObjectiveoutcomesauth0Function.AppSyncFunction": [
           {
             "type": "aws:cdk:logicalId",
@@ -4795,6 +4913,24 @@
             "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
           }
         ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/reference-to-amplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputs.amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
+          }
+        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId": [
           {
             "type": "aws:cdk:logicalId",
@@ -4813,58 +4949,28 @@
             "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiB06D580D6DestinationBucketArn"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
-          }
-        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data.NestedStack/data.NestedStackResource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "data7552DF31"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncApiId": [
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "awsAppsyncApiId"
+            "data": "sendnotificationlambdaServiceRoleFCF78BDB"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncApiEndpoint": [
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/DefaultPolicy/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "awsAppsyncApiEndpoint"
+            "data": "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncAuthenticationType": [
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "awsAppsyncAuthenticationType"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncRegion": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "awsAppsyncRegion"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/amplifyApiModelSchemaS3Uri": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyApiModelSchemaS3Uri"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncAdditionalAuthenticationTypes": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "awsAppsyncAdditionalAuthenticationTypes"
+            "data": "sendnotificationlambdaD10EB6D8"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/ServiceRole/Resource": [
@@ -4909,6 +5015,12 @@
             "data": "CDKMetadataAvailable"
           }
         ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn"
+          }
+        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/function/reference-to-amplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
           {
             "type": "aws:cdk:logicalId",
@@ -4919,6 +5031,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Ref"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref": [
@@ -4943,6 +5061,42 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "definedFunctions"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncApiId"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncApiEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncApiEndpoint"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncAuthenticationType": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncAuthenticationType"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncRegion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncRegion"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/amplifyApiModelSchemaS3Uri": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyApiModelSchemaS3Uri"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/awsAppsyncAdditionalAuthenticationTypes": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncAdditionalAuthenticationTypes"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/CDKMetadata/Default": [
