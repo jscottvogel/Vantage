@@ -20,11 +20,11 @@ interface AppState {
 
     // Actions
     checkSession: () => Promise<void>;
-    login: (email: string, password?: string) => Promise<void>;
+    login: (email: string, password?: string) => Promise<string | void>;
     logout: () => Promise<void>;
 
     // Org & User Management
-    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<'CONFIRM' | 'COMPLETE' | 'FAILED'>;
+    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<'CONFIRM' | 'COMPLETE' | 'FAILED' | 'EXISTS'>;
     confirmSignUp: (email: string, code: string) => Promise<void>;
     updateOrganization: (updates: Partial<Organization>) => void;
 
@@ -216,22 +216,30 @@ export const useStore = create<AppState>((set, get) => ({
         try {
             await AuthService.signInWithPassword(cleanEmail, password);
             await get().checkSession();
+            return 'SUCCESS';
         } catch (e: any) {
             console.error("Login failed:", e);
+
+            if (e.name === 'UserNotConfirmedException') {
+                set({ isLoading: false, authError: "User is not confirmed." });
+                return 'NOT_CONFIRMED';
+            }
+
             if (e.name === 'UserAlreadyAuthenticatedException' || e.message?.includes('already a signed in user')) {
                 // Force logout and retry login
                 try {
                     await AuthService.signOut();
                     await AuthService.signInWithPassword(cleanEmail, password);
                     await get().checkSession();
-                    return;
+                    return 'SUCCESS';
                 } catch (retryError: any) {
                     console.error("Retry login failed:", retryError);
                     set({ isLoading: false, authError: retryError.message || "Login failed after retry" });
-                    return;
+                    return 'FAILED';
                 }
             }
             set({ isLoading: false, authError: e.message || "Login failed" });
+            return 'FAILED';
         }
     },
 
@@ -267,6 +275,8 @@ export const useStore = create<AppState>((set, get) => ({
                 errorMessage.includes('UsernameExistsException')
             ) {
                 msg = "An account with this email already exists.";
+                set({ isLoading: false, authError: msg });
+                return 'EXISTS';
             } else if (errorName === 'CodeDeliveryFailureException') {
                 msg = "Failed to send verification email. Please check the email address.";
             }

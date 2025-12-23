@@ -23,21 +23,24 @@ export function OrganizationSignUp() {
         e.preventDefault();
         if (adminName.trim() && adminEmail.trim()) {
             try {
-                // Determine if we are just logging in (user exists) or signing up
-                if (authError && authError.includes('already exists')) {
-                    // Try to login, if it fails with not confirmed, go to verify
-                    await login(adminEmail, password);
-                } else {
-                    const result = await signupOrganization(orgName, adminEmail, adminName, password);
-                    if (result === 'CONFIRM') {
+                // Try initial signup
+                let result = await signupOrganization(orgName, adminEmail, adminName, password);
+
+                // If account exists, try logging in to check status
+                if (result === 'EXISTS') {
+                    const loginResult = await login(adminEmail, password);
+                    if (loginResult === 'NOT_CONFIRMED') {
                         setStep('verify');
                         return;
-                    } else if (result === 'COMPLETE') {
-                        await login(adminEmail, password);
                     }
+                } else if (result === 'CONFIRM') {
+                    setStep('verify');
+                    return;
+                } else if (result === 'COMPLETE') {
+                    await login(adminEmail, password);
                 }
 
-                // Check for UserNotConfirmed error after attempts
+                // Fallback check (legacy or if status code missed)
                 const currentError = useStore.getState().authError;
                 if (currentError && currentError.includes('not confirmed')) {
                     setStep('verify');
