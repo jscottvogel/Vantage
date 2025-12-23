@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
@@ -6,6 +7,7 @@ import { ArrowRight, Building2, ShieldCheck, Mail } from 'lucide-react';
 
 export function OrganizationSignUp() {
     const { signupOrganization, confirmSignUp, login, isLoading, authError } = useStore();
+    const navigate = useNavigate();
     const [step, setStep] = useState<'org' | 'admin' | 'verify'>('org');
 
     const [orgName, setOrgName] = useState('');
@@ -33,11 +35,13 @@ export function OrganizationSignUp() {
                         setStep('verify');
                         return;
                     }
+                    if (loginResult === 'SUCCESS') navigate('/');
                 } else if (result === 'CONFIRM') {
                     setStep('verify');
                     return;
                 } else if (result === 'COMPLETE') {
                     await login(adminEmail, password);
+                    navigate('/');
                 }
 
                 // Fallback check (legacy or if status code missed)
@@ -58,6 +62,7 @@ export function OrganizationSignUp() {
                 await confirmSignUp(adminEmail, code);
                 // Success! Now login
                 await login(adminEmail, password);
+                navigate('/');
             } catch (err) {
                 // Error handled in store
             }

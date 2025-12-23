@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
@@ -18,6 +18,8 @@ export function LoginPage() {
 
     const { login, resetPassword, confirmNewPassword, isLoading, authError } = useStore();
 
+    const navigate = useNavigate();
+
     // Reset error when switching views
     const switchView = (v: typeof view) => {
         useStore.setState({ authError: null });
@@ -28,7 +30,10 @@ export function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         if (email && password) {
-            await login(email, password);
+            const result = await login(email, password);
+            if (result === 'SUCCESS') {
+                navigate('/');
+            }
         }
     };
 
