@@ -53,6 +53,7 @@ const schema = a.schema({
 
         goal: a.string().required(),
         benefit: a.string().required(),
+        ownerId: a.string(),
         startDate: a.string(),
         targetDate: a.string(),
 

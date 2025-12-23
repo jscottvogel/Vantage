@@ -139,6 +139,7 @@ export interface Outcome {
     id: string;
     goal: string;
     benefit: string;
+    ownerId?: string;
     startDate: string;
     targetDate: string;
     heartbeatCadence: HeartbeatCadence;

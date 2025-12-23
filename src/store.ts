@@ -43,6 +43,7 @@ interface AppState {
         outcomes: {
             goal: string;
             benefit: string;
+            ownerId: string;
             startDate: string;
             targetDate: string;
             heartbeatCadence: HeartbeatCadence;
@@ -191,7 +192,7 @@ export const useStore = create<AppState>((set, get) => ({
                     selectionSet: [
                         'id', 'name', 'ownerId', 'strategicValue', 'targetDate', 'status', 'currentHealth', 'riskScore', 'tenantId', 'createdAt', 'updatedAt',
                         'heartbeats.*',
-                        'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
+                        'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.ownerId', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
                         'outcomes.keyResults.id', 'outcomes.keyResults.description', 'outcomes.keyResults.ownerId', 'outcomes.keyResults.startDate', 'outcomes.keyResults.targetDate', 'outcomes.keyResults.heartbeatCadence.*',
                         'outcomes.keyResults.heartbeats.*',
                         'outcomes.keyResults.initiatives.id', 'outcomes.keyResults.initiatives.name', 'outcomes.keyResults.initiatives.ownerId', 'outcomes.keyResults.initiatives.link', 'outcomes.keyResults.initiatives.status', 'outcomes.keyResults.initiatives.startDate', 'outcomes.keyResults.initiatives.targetEndDate',
@@ -416,6 +417,7 @@ export const useStore = create<AppState>((set, get) => ({
                     objectiveId: newObj.id,
                     goal: out.goal,
                     benefit: out.benefit,
+                    ownerId: out.ownerId,
                     startDate: out.startDate,
                     targetDate: out.targetDate,
                     heartbeatCadence: out.heartbeatCadence

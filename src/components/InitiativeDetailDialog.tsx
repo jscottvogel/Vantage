@@ -125,6 +125,14 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
         }
     };
 
+    const getOwnerName = (id: string) => {
+        // Fallback: If ID matches current user's Auth ID (legacy data), return their name
+        if (store.currentUser && id === store.currentUser.id) return store.currentUser.name;
+
+        const user = store.users.find(u => u.id === id);
+        return user ? user.name : id;
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-4xl relative max-h-[90vh] overflow-hidden flex flex-col">
@@ -135,7 +143,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                 <CardHeader className="flex-shrink-0 border-b bg-muted/20">
                     <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">{initiative.status}</Badge>
-                        <span className="text-muted-foreground text-sm">Owner: {initiative.ownerId}</span>
+                        <span className="text-muted-foreground text-sm">Owner: {getOwnerName(initiative.ownerId)}</span>
                     </div>
                     <CardTitle className="text-xl flex items-center gap-2">
                         {initiative.name}

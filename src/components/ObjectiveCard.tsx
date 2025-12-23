@@ -29,8 +29,13 @@ export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
     // Helper to safely get first Outcome
     const firstOutcome = objective.outcomes && objective.outcomes.length > 0 ? objective.outcomes[0] : null;
 
+    const currentUser = useStore(state => state.currentUser);
+
     // Resolve Owner Name
     const getOwnerName = (id: string) => {
+        // Fallback: If ID matches current user's Auth ID (legacy data), return their name
+        if (currentUser && id === currentUser.id) return currentUser.name;
+
         const user = users.find(u => u.id === id);
         return user ? user.name : id;
     };

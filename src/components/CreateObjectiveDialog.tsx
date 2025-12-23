@@ -27,6 +27,7 @@ interface KeyResultForm {
 interface OutcomeForm {
     goal: string;
     benefit: string;
+    ownerId: string;
     startDate: string;
     targetDate: string;
     heartbeatCadence: CadenceSchedule;
@@ -43,6 +44,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
         {
             goal: '',
             benefit: '',
+            ownerId: '',
             startDate: new Date().toISOString().split('T')[0],
             targetDate: '',
             heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
@@ -62,6 +64,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
     const objectives = useStore(state => state.objectives);
     const maxActive = useStore(state => state.maxActiveObjectives);
     const users = useStore(state => state.users);
+    const activeUsers = users.filter(u => u.status === 'Active');
 
     const activeCount = objectives.filter(i => i.status === 'Active').length;
     const isOverCap = activeCount >= maxActive;
@@ -71,6 +74,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
         setOutcomes([...outcomes, {
             goal: '',
             benefit: '',
+            ownerId: '',
             startDate: new Date().toISOString().split('T')[0],
             targetDate: targetDate || '', // inherit objective target if set
             heartbeatCadence: { frequency: 'weekly', dueDay: 'Friday', dueTime: '17:00' },
@@ -179,7 +183,11 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
             try {
                 // Basic validation: Ensure at least one outcome with a goal
                 const validOutcomes = outcomes.filter(o => o.goal.trim().length > 0);
-                await createObjective(name, currentUser.id, strategicValue, targetDate, validOutcomes);
+                // Use DB User ID if available, otherwise fallback to Auth ID
+                const dbUser = users.find(u => u.email === currentUser.email);
+                const ownerIdToUse = dbUser ? dbUser.id : currentUser.id;
+
+                await createObjective(name, ownerIdToUse, strategicValue, targetDate, validOutcomes);
                 onClose();
             } catch (error) {
                 console.error("Failed to create objective", error);
@@ -292,7 +300,20 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-4 mb-4">
+                                        <div className="grid grid-cols-4 gap-4 mb-4">
+                                            <div className="space-y-2 col-span-2">
+                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</label>
+                                                <select
+                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm appearance-none"
+                                                    value={outcome.ownerId}
+                                                    onChange={e => handleUpdateOutcome(oIndex, 'ownerId', e.target.value)}
+                                                >
+                                                    <option value="">Select Owner</option>
+                                                    {activeUsers.map(u => (
+                                                        <option key={u.id} value={u.id}>{u.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Start Date</label>
                                                 <input
@@ -311,7 +332,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                     onChange={e => handleUpdateOutcome(oIndex, 'targetDate', e.target.value)}
                                                 />
                                             </div>
-                                            <div className="space-y-2 col-span-3">
+                                            <div className="space-y-2 col-span-4">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Heartbeat Schedule</label>
                                                 <div className="flex gap-2">
                                                     <select
@@ -377,7 +398,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                                 onChange={e => handleUpdateKR(oIndex, kIndex, 'ownerId', e.target.value)}
                                                             >
                                                                 <option value="">Owner</option>
-                                                                {users.map(u => (
+                                                                {activeUsers.map(u => (
                                                                     <option key={u.id} value={u.id}>{u.name}</option>
                                                                 ))}
                                                             </select>
@@ -453,7 +474,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                                     onChange={e => handleUpdateInitiative(oIndex, kIndex, iIndex, 'ownerId', e.target.value)}
                                                                 >
                                                                     <option value="">Owner</option>
-                                                                    {users.map(u => (
+                                                                    {activeUsers.map(u => (
                                                                         <option key={u.id} value={u.id}>{u.name}</option>
                                                                     ))}
                                                                 </select>

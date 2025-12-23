@@ -25,6 +25,7 @@ interface ObjectiveDetailDialogProps {
 export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative }: ObjectiveDetailDialogProps) {
     const store = useStore();
     const objective = store.objectives.find(o => o.id === objectiveId);
+    const activeUsers = store.users.filter(u => u.status === 'Active');
 
     const [selectedKR, setSelectedKR] = useState<{ krId: string } | null>(null);
     const [addingToKR, setAddingToKR] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
         store.addKeyResult(objectiveId, outcomeId, newKR);
         setAddingKRToOutcome(null);
         setNewKRDescription('');
-        setNewKROwnerId(store.currentUser?.id || store.users[0]?.id || '');
+        setNewKROwnerId(store.currentUser?.id || activeUsers[0]?.id || '');
     };
 
     const startEditingKR = (kr: KeyResult) => {
@@ -141,6 +142,14 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
         return [...heartbeats].sort((a, b) => new Date(b.periodEnd).getTime() - new Date(a.periodEnd).getTime())[0];
     };
 
+    const getOwnerName = (id: string) => {
+        // Fallback: If ID matches current user's Auth ID (legacy data), return their name
+        if (store.currentUser && id === store.currentUser.id) return store.currentUser.name;
+
+        const user = store.users.find(u => u.id === id);
+        return user ? user.name : id;
+    };
+
     const healthIcon = (signal: string) => {
         switch (signal) {
             case 'green': return <div className="w-3 h-3 rounded-full bg-green-500" />;
@@ -168,9 +177,16 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                     {objective.outcomes.map((outcome, oIdx) => (
                         <div key={outcome.id} className="space-y-4">
                             <div className="flex items-center justify-between text-lg font-semibold text-primary">
-                                <div className="flex items-center gap-2">
-                                    <Layers className="w-5 h-5" />
-                                    <h3>Outcome {oIdx + 1}: {outcome.goal}</h3>
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <Layers className="w-5 h-5" />
+                                        <h3>Outcome {oIdx + 1}: {outcome.goal}</h3>
+                                    </div>
+                                    {outcome.ownerId && (
+                                        <span className="text-xs text-muted-foreground ml-7 font-normal">
+                                            Owner: {getOwnerName(outcome.ownerId)}
+                                        </span>
+                                    )}
                                 </div>
                                 {addingKRToOutcome !== outcome.id && (
                                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingKRToOutcome(outcome.id)}>
@@ -204,7 +220,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                 value={newKROwnerId}
                                                 onChange={e => setNewKROwnerId(e.target.value)}
                                             >
-                                                {store.users.map(u => (
+                                                {activeUsers.map(u => (
                                                     <option key={u.id} value={u.id}>{u.name}</option>
                                                 ))}
                                             </select>
@@ -237,7 +253,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                                 value={editKROwnerId}
                                                                 onChange={e => setEditKROwnerId(e.target.value)}
                                                             >
-                                                                {store.users.map(u => (
+                                                                {activeUsers.map(u => (
                                                                     <option key={u.id} value={u.id}>{u.name}</option>
                                                                 ))}
                                                             </select>
@@ -262,7 +278,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                                 </div>
                                                             </div>
                                                             <div className="text-xs text-muted-foreground mt-1 flex items-center gap-3">
-                                                                <span>Owner: {store.users.find(u => u.id === kr.ownerId)?.name || kr.ownerId}</span>
+                                                                <span>Owner: {getOwnerName(kr.ownerId)}</span>
                                                                 <span>Target: {new Date(kr.targetDate).toLocaleDateString()}</span>
                                                                 <Badge variant="outline" className="text-[10px] h-4">{formatCadence(kr.heartbeatCadence)}</Badge>
                                                                 <Button
@@ -335,7 +351,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                             value={newInitOwnerId}
                                                             onChange={e => setNewInitOwnerId(e.target.value)}
                                                         >
-                                                            {store.users.map(u => (
+                                                            {activeUsers.map(u => (
                                                                 <option key={u.id} value={u.id}>{u.name}</option>
                                                             ))}
                                                         </select>
@@ -358,7 +374,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                                     <div className="space-y-1">
                                                                         <div className="font-medium text-sm pr-6">{init.name}</div>
                                                                         <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                                                                            <span>Owner: {store.users.find(u => u.id === init.ownerId)?.name || init.ownerId}</span>
+                                                                            <span>Owner: {getOwnerName(init.ownerId)}</span>
                                                                             <Button
                                                                                 size="sm"
                                                                                 variant="ghost"
