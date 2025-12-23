@@ -21,6 +21,9 @@
     "EmailVerificationMessage": "The verification code to your new account is {####}",
     "EmailVerificationSubject": "Verify your new account",
     "LambdaConfig": {
+     "PostConfirmation": {
+      "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
+     },
      "PreSignUp": {
       "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn"
      }
@@ -90,6 +93,27 @@
    "DeletionPolicy": "Delete",
    "Metadata": {
     "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PreSignUpCognito"
+   }
+  },
+  "amplifyAuthUserPoolPostConfirmationCognitoE7E727CF": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
+    },
+    "Principal": "cognito-idp.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "amplifyAuthUserPool4BA7F805",
+      "Arn"
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PostConfirmationCognito"
    }
   },
   "amplifyAuthUserPoolAppClient2626C6F8": {
@@ -603,6 +627,9 @@
  },
  "Parameters": {
   "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn": {
+   "Type": "String"
+  },
+  "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn": {
    "Type": "String"
   }
  },

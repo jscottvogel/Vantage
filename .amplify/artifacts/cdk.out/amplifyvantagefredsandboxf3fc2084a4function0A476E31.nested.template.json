@@ -61,7 +61,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "39526d7c7319fe1b44c71fdbc9b3bc8bc4ae05f9662dfac32d173c05b2bdf7ed.zip"
+     "S3Key": "4aac4c0bf708f6ff0cfff7e3778e69ed2fd588d7d7d3e66b0ee5009a18cd47ce.zip"
     },
     "Environment": {
      "Variables": {
@@ -103,12 +103,12 @@
    "DeletionPolicy": "Delete",
    "Metadata": {
     "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/Resource",
-    "aws:asset:path": "asset.39526d7c7319fe1b44c71fdbc9b3bc8bc4ae05f9662dfac32d173c05b2bdf7ed",
+    "aws:asset:path": "asset.4aac4c0bf708f6ff0cfff7e3778e69ed2fd588d7d7d3e66b0ee5009a18cd47ce",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
   },
-  "sendnotificationlambdaServiceRoleFCF78BDB": {
+  "postconfirmationlambdaServiceRoleD88F89BD": {
    "Type": "AWS::IAM::Role",
    "Properties": {
     "AssumeRolePolicyDocument": {
@@ -144,7 +144,7 @@
      },
      {
       "Key": "amplify:friendly-name",
-      "Value": "send-notification"
+      "Value": "post-confirmation"
      },
      {
       "Key": "created-by",
@@ -155,39 +155,57 @@
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
    "Metadata": {
-    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/Resource"
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/Resource"
    }
   },
-  "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C": {
+  "postconfirmationlambdaServiceRoleDefaultPolicyCD4BF2C1": {
    "Type": "AWS::IAM::Policy",
    "Properties": {
     "PolicyDocument": {
      "Statement": [
       {
        "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail"
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
        ],
        "Effect": "Allow",
-       "Resource": "*"
+       "Resource": {
+        "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A"
+       }
+      },
+      {
+       "Action": [
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90"
+       }
       }
      ],
      "Version": "2012-10-17"
     },
-    "PolicyName": "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C",
+    "PolicyName": "postconfirmationlambdaServiceRoleDefaultPolicyCD4BF2C1",
     "Roles": [
      {
-      "Ref": "sendnotificationlambdaServiceRoleFCF78BDB"
+      "Ref": "postconfirmationlambdaServiceRoleD88F89BD"
      }
     ]
    },
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
    "Metadata": {
-    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/ServiceRole/DefaultPolicy/Resource"
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/DefaultPolicy/Resource"
    }
   },
-  "sendnotificationlambdaD10EB6D8": {
+  "postconfirmationlambda195D98D2": {
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Architectures": [
@@ -197,11 +215,57 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "33043c4135a3f956654f3f2622325a3750383fddd9e84606b66413bc39abf8b2.zip"
+     "S3Key": "99b97ba91cf8845fe1db7077b725478ebf30871b62293a50a9af3021ced0eaad.zip"
     },
     "Environment": {
      "Variables": {
-      "AMPLIFY_SSM_ENV_CONFIG": "{}"
+      "AMPLIFY_SSM_ENV_CONFIG": "{}",
+      "ORG_TABLE": {
+       "Fn::Select": [
+        1,
+        {
+         "Fn::Split": [
+          "/",
+          {
+           "Fn::Select": [
+            5,
+            {
+             "Fn::Split": [
+              ":",
+              {
+               "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "USER_TABLE": {
+       "Fn::Select": [
+        1,
+        {
+         "Fn::Split": [
+          "/",
+          {
+           "Fn::Select": [
+            5,
+            {
+             "Fn::Split": [
+              ":",
+              {
+               "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
      }
     },
     "EphemeralStorage": {
@@ -211,7 +275,7 @@
     "MemorySize": 512,
     "Role": {
      "Fn::GetAtt": [
-      "sendnotificationlambdaServiceRoleFCF78BDB",
+      "postconfirmationlambdaServiceRoleD88F89BD",
       "Arn"
      ]
     },
@@ -223,7 +287,7 @@
      },
      {
       "Key": "amplify:friendly-name",
-      "Value": "send-notification"
+      "Value": "post-confirmation"
      },
      {
       "Key": "created-by",
@@ -233,14 +297,14 @@
     "Timeout": 3
    },
    "DependsOn": [
-    "sendnotificationlambdaServiceRoleDefaultPolicy0FB7B25C",
-    "sendnotificationlambdaServiceRoleFCF78BDB"
+    "postconfirmationlambdaServiceRoleDefaultPolicyCD4BF2C1",
+    "postconfirmationlambdaServiceRoleD88F89BD"
    ],
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
    "Metadata": {
-    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/send-notification-lambda/Resource",
-    "aws:asset:path": "asset.33043c4135a3f956654f3f2622325a3750383fddd9e84606b66413bc39abf8b2",
+    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/Resource",
+    "aws:asset:path": "asset.99b97ba91cf8845fe1db7077b725478ebf30871b62293a50a9af3021ced0eaad",
     "aws:asset:is-bundled": true,
     "aws:asset:property": "Code"
    }
@@ -531,23 +595,31 @@
     ]
    }
   },
+  "amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "postconfirmationlambda195D98D2",
+     "Arn"
+    ]
+   }
+  },
   "amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref": {
    "Value": {
     "Ref": "presignuplambdaE72B81B3"
    }
   },
-  "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Ref": {
+  "amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref": {
    "Value": {
-    "Ref": "sendnotificationlambdaD10EB6D8"
+    "Ref": "postconfirmationlambda195D98D2"
    }
+  }
+ },
+ "Parameters": {
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A": {
+   "Type": "String"
   },
-  "amplifyvantagefredsandboxf3fc2084a4functionsendnotificationlambda620B99E0Arn": {
-   "Value": {
-    "Fn::GetAtt": [
-     "sendnotificationlambdaD10EB6D8",
-     "Arn"
-    ]
-   }
+  "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90": {
+   "Type": "String"
   }
  }
 }
