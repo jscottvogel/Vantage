@@ -24,7 +24,7 @@ interface AppState {
     logout: () => Promise<void>;
 
     // Org & User Management
-    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<boolean>;
+    signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<'CONFIRM' | 'COMPLETE' | 'FAILED'>;
     confirmSignUp: (email: string, code: string) => Promise<void>;
     updateOrganization: (updates: Partial<Organization>) => void;
 
@@ -186,9 +186,17 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e: any) {
             console.error("Login failed:", e);
             if (e.name === 'UserAlreadyAuthenticatedException' || e.message?.includes('already a signed in user')) {
-                // If already signed in, just check session
-                await get().checkSession();
-                return;
+                // Force logout and retry login
+                try {
+                    await AuthService.signOut();
+                    await AuthService.signInWithPassword(email, password);
+                    await get().checkSession();
+                    return;
+                } catch (retryError: any) {
+                    console.error("Retry login failed:", retryError);
+                    set({ isLoading: false, authError: retryError.message || "Login failed after retry" });
+                    return;
+                }
             }
             set({ isLoading: false, authError: e.message || "Login failed" });
         }
@@ -207,10 +215,10 @@ export const useStore = create<AppState>((set, get) => ({
 
             if (nextStep?.signUpStep === 'CONFIRM_SIGN_UP') {
                 set({ isLoading: false });
-                return false;
+                return 'CONFIRM';
             }
 
-            return true;
+            return 'COMPLETE';
         } catch (e: any) {
             console.error("Signup failed:", e);
             let msg = e.message || "An unexpected error occurred.";
@@ -231,7 +239,7 @@ export const useStore = create<AppState>((set, get) => ({
             }
 
             set({ isLoading: false, authError: msg });
-            return false;
+            return 'FAILED';
         }
     },
 

@@ -22,13 +22,14 @@ export function OrganizationSignUp() {
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (adminName.trim() && adminEmail.trim()) {
-            const complete = await signupOrganization(orgName, adminEmail, adminName, password);
-            if (!complete) {
+            const result = await signupOrganization(orgName, adminEmail, adminName, password);
+            if (result === 'CONFIRM') {
                 setStep('verify');
-            } else {
-                // If returns true, maybe auto-confirmed or something, try login
+            } else if (result === 'COMPLETE') {
+                // If returns COMPLETE, maybe auto-confirmed or something, try login
                 await login(adminEmail, password);
             }
+            // If FAILED, stay on this step to show error
         }
     };
 
@@ -126,6 +127,9 @@ export function OrganizationSignUp() {
                                     required
                                     minLength={8}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Must be at least 8 characters, including uppercase, lowercase, numbers, and symbols.
+                                </p>
                             </div>
 
                             {authError && (
