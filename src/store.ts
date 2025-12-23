@@ -185,6 +185,11 @@ export const useStore = create<AppState>((set, get) => ({
             await get().checkSession();
         } catch (e: any) {
             console.error("Login failed:", e);
+            if (e.name === 'UserAlreadyAuthenticatedException' || e.message?.includes('already a signed in user')) {
+                // If already signed in, just check session
+                await get().checkSession();
+                return;
+            }
             set({ isLoading: false, authError: e.message || "Login failed" });
         }
     },
