@@ -6,8 +6,10 @@ import { Badge } from './ui/badge';
 import { X, HeartPulse, Plus, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { Heartbeat, Initiative, LeadingIndicator, Evidence, Risk, CadenceSchedule } from '../types';
 
-const formatCadence = (schedule: CadenceSchedule | string) => {
+const formatCadence = (schedule: CadenceSchedule | string | undefined | null) => {
+    if (!schedule) return 'N/A';
     if (typeof schedule === 'string') return schedule;
+    if (!schedule.frequency) return 'N/A';
     return `${schedule.frequency.charAt(0).toUpperCase() + schedule.frequency.slice(1)} on ${schedule.dueDay}s`;
 }
 

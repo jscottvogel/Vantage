@@ -8,8 +8,11 @@ import { KeyResultHeartbeatDialog } from './KeyResultHeartbeatDialog';
 import { NotificationService } from '../services/notification';
 import type { Heartbeat, Initiative, KeyResult, CadenceSchedule } from '../types';
 
-const formatCadence = (schedule: CadenceSchedule | string) => {
+const formatCadence = (schedule: CadenceSchedule | string | undefined | null) => {
+    if (!schedule) return 'N/A';
     if (typeof schedule === 'string') return schedule;
+    // Defensive check for frequency, just in case
+    if (!schedule.frequency) return 'N/A';
     return `${schedule.frequency.charAt(0).toUpperCase() + schedule.frequency.slice(1)} on ${schedule.dueDay}s`;
 }
 
