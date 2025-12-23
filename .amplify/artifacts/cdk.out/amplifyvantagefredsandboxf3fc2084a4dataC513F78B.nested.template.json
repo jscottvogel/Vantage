@@ -2021,22 +2021,6 @@
   }
  },
  "Outputs": {
-  "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": {
-   "Value": {
-    "Fn::GetAtt": [
-     "amplifyDataOrganizationNestedStackOrganizationNestedStackResource458A453D",
-     "Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
-    ]
-   }
-  },
-  "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": {
-   "Value": {
-    "Fn::GetAtt": [
-     "amplifyDataUserNestedStackUserNestedStackResource9488907F",
-     "Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
-    ]
-   }
-  },
   "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataGraphQLAPI021BAC24ApiId": {
    "Value": {
     "Fn::GetAtt": [
@@ -2058,6 +2042,22 @@
     "Fn::GetAtt": [
      "amplifyDataAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiB21775929",
      "DestinationBucketArn"
+    ]
+   }
+  },
+  "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "amplifyDataOrganizationNestedStackOrganizationNestedStackResource458A453D",
+     "Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
+    ]
+   }
+  },
+  "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "amplifyDataUserNestedStackUserNestedStackResource9488907F",
+     "Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
     ]
    }
   }

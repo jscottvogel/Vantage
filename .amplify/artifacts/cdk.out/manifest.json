@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e727225b8a32847dbf3fa91d3b4fb521933909f15314c517569fff496537b062.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e9a701e5d8aaf2a3895bdb57f5e590196068ed1565e9d5319254f2633a7be0d1.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -71,18 +71,6 @@
             "data": "amplifyAuthUserPool4BA7F805"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PreSignUpCognito": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyAuthUserPoolPreSignUpCognito55F45D8E"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PostConfirmationCognito": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyAuthUserPoolPostConfirmationCognitoE7E727CF"
-          }
-        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPoolAppClient/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -123,18 +111,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadataAvailable"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/reference-to-amplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputs.amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/reference-to-amplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputs.amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyvantagefredsandboxf3fc2084a4authamplifyAuthUserPool21E6677DRef": [
@@ -291,96 +267,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "groups"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/ServiceRole/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "presignuplambdaServiceRole1120074C"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "presignuplambdaE72B81B3"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "postconfirmationlambdaServiceRoleD88F89BD"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/DefaultPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "postconfirmationlambdaServiceRoleDefaultPolicyCD4BF2C1"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "postconfirmationlambda195D98D2"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/CDKMetadata/Default": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CDKMetadata"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/CDKMetadata/Condition": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CDKMetadataAvailable"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/reference-to-amplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/reference-to-amplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/function.NestedStack/function.NestedStackResource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "function1351588B"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/definedFunctions": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "definedFunctions"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/GraphQLAPI/Resource": [
@@ -975,12 +861,6 @@
             "data": "CDKMetadataAvailable"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/User/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
-          }
-        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/User/reference-to-amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResourceADCA6139Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyTableManagerTableManagerCustomProviderframeworkonEventA9EB0B6DArn": [
           {
             "type": "aws:cdk:logicalId",
@@ -1015,6 +895,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/User/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/User.NestedStack/User.NestedStackResource": [
@@ -1489,12 +1375,6 @@
             "data": "CDKMetadataAvailable"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/Organization/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
-          }
-        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/Organization/reference-to-amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResourceADCA6139Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyTableManagerTableManagerCustomProviderframeworkonEventA9EB0B6DArn": [
           {
             "type": "aws:cdk:logicalId",
@@ -1529,6 +1409,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "referencetoamplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputsamplifyvantagefredsandboxf3fc2084a4authamplifyAuthIdentityPoolF9B37B82Ref"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/Organization/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyData/Organization.NestedStack/Organization.NestedStackResource": [
@@ -4885,18 +4771,6 @@
             "data": "CDKMetadataAvailable"
           }
         ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
-          }
-        ],
-        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
-          }
-        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data/reference-to-amplifyvantagefredsandboxf3fc2084a4authNestedStackauthNestedStackResource93563C34Outputs.amplifyvantagefredsandboxf3fc2084a4authamplifyAuthUserPool21E6677DRef": [
           {
             "type": "aws:cdk:logicalId",
@@ -4939,6 +4813,18 @@
             "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiB06D580D6DestinationBucketArn"
           }
         ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/data/amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn"
+          }
+        ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/data.NestedStack/data.NestedStackResource": [
           {
             "type": "aws:cdk:logicalId",
@@ -4979,6 +4865,84 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "awsAppsyncAdditionalAuthenticationTypes"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "presignuplambdaServiceRole1120074C"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/pre-signup-lambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "presignuplambdaE72B81B3"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "postconfirmationlambdaServiceRoleD88F89BD"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "postconfirmationlambdaServiceRoleDefaultPolicyCD4BF2C1"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/post-confirmation-lambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "postconfirmationlambda195D98D2"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/reference-to-amplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationOrganizationTableDE51153ATableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataOrganizationNestedStackOrganizationNestedStackResource164377BDOutputsamplifyvantagefredsandBE36F36A"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/reference-to-amplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputs.amplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserUserTableC1C323B6TableArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyvantagefredsandboxf3fc2084a4dataNestedStackdataNestedStackResource045EEDF4Outputsamplifyvantagefredsandboxf3fc2084a4dataamplifyDataUserNestedStackUserNestedStackResourceCF8C1FE2Outputsamplifyvantagefredsandboxf3fc2084a4datD49F3C90"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Ref"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function/amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Ref"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/function.NestedStack/function.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "function1351588B"
+          }
+        ],
+        "/amplify-vantage-fred-sandbox-f3fc2084a4/definedFunctions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "definedFunctions"
           }
         ],
         "/amplify-vantage-fred-sandbox-f3fc2084a4/CDKMetadata/Default": [

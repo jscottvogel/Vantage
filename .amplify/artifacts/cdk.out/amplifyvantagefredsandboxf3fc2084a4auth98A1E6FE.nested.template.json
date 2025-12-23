@@ -20,14 +20,6 @@
     ],
     "EmailVerificationMessage": "The verification code to your new account is {####}",
     "EmailVerificationSubject": "Verify your new account",
-    "LambdaConfig": {
-     "PostConfirmation": {
-      "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
-     },
-     "PreSignUp": {
-      "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn"
-     }
-    },
     "Policies": {
      "PasswordPolicy": {
       "MinimumLength": 8,
@@ -72,48 +64,6 @@
    "DeletionPolicy": "Delete",
    "Metadata": {
     "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/Resource"
-   }
-  },
-  "amplifyAuthUserPoolPreSignUpCognito55F45D8E": {
-   "Type": "AWS::Lambda::Permission",
-   "Properties": {
-    "Action": "lambda:InvokeFunction",
-    "FunctionName": {
-     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn"
-    },
-    "Principal": "cognito-idp.amazonaws.com",
-    "SourceArn": {
-     "Fn::GetAtt": [
-      "amplifyAuthUserPool4BA7F805",
-      "Arn"
-     ]
-    }
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PreSignUpCognito"
-   }
-  },
-  "amplifyAuthUserPoolPostConfirmationCognitoE7E727CF": {
-   "Type": "AWS::Lambda::Permission",
-   "Properties": {
-    "Action": "lambda:InvokeFunction",
-    "FunctionName": {
-     "Ref": "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn"
-    },
-    "Principal": "cognito-idp.amazonaws.com",
-    "SourceArn": {
-     "Fn::GetAtt": [
-      "amplifyAuthUserPool4BA7F805",
-      "Arn"
-     ]
-    }
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/amplifyAuth/UserPool/PostConfirmationCognito"
    }
   },
   "amplifyAuthUserPoolAppClient2626C6F8": {
@@ -351,7 +301,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02LSw6CMBCGz+K+jAJewLByYwzGtSntoKPtNGEGiSHc3RCDuvr+ZwFFWcJmZQfJnH9kgRoYDyiK/qTWPYwd5DK6dGXSBONZsDumFEzV8lcvogqErP/VL9l7ZCV9Led/X6eAO1XrbhFZJxNsbLyFquUjdpFEKLEhG2Gcl/N75jSZGiX1ncPJcPIId1k/iy3kOeSruxBlXc9KEaH+8A15llnl7AAAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02LwQ6CMBBEv4V7WQX8AcPJizEYz6a2qy6UbkIXiWn674YYlNPMvJkpoawq2GZ6CrmxXe7oBvGIQdCeRZtO6Slco+GHJ2GIl4DDidmp+u5/fjG1I/Syrv7kYNELyXs5r3PDDvci2jx79JIU6R7iDOfhrCmpBgOPg8GkPFuENmxe5Q6KAoqsDUT5MHqhHqH56gcp35TS1wAAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "amplify-vantage-fred-sandbox-f3fc2084a4/auth/CDKMetadata/Default"
@@ -623,14 +573,6 @@
      ]
     }
    ]
-  }
- },
- "Parameters": {
-  "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpresignuplambda66C09E04Arn": {
-   "Type": "String"
-  },
-  "referencetoamplifyvantagefredsandboxf3fc2084a4functionNestedStackfunctionNestedStackResourceB62DAB78Outputsamplifyvantagefredsandboxf3fc2084a4functionpostconfirmationlambda6DA002C8Arn": {
-   "Type": "String"
   }
  },
  "Outputs": {

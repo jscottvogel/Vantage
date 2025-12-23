@@ -6,8 +6,8 @@ export const auth = defineAuth({
     loginWith: {
         email: true,
     },
-    triggers: {
+    /* triggers: {
         preSignUp,
-        postConfirmation,
-    },
+        // postConfirmation,
+    }, */
 });
