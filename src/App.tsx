@@ -27,7 +27,7 @@ function App() {
   }
 
   if (!currentUser) {
-    if (location.pathname === '/signup') {
+    if (location.pathname.replace(/\/$/, '') === '/signup') {
       return <OrganizationSignUp />;
     }
     // Redirect to login if not signed up or logged in, but allow signup page
