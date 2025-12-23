@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
@@ -9,6 +9,13 @@ export function OrganizationSettings() {
     const { currentOrganization: org, updateOrganization, planName } = useStore();
     const [name, setName] = useState(org?.name || '');
     const [isSaved, setIsSaved] = useState(false);
+
+    // Sync local state when store is populated
+    useEffect(() => {
+        if (org?.name) {
+            setName(org.name);
+        }
+    }, [org?.name]);
 
     if (!org) return <div>No Organization Found</div>;
 

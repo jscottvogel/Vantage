@@ -289,10 +289,27 @@ export const useStore = create<AppState>((set, get) => ({
         }
     },
 
-    updateOrganization: (updates) => set(state => state.currentOrganization ? ({
-        currentOrganization: { ...state.currentOrganization, ...updates },
-        planName: updates.subscriptionTier === 'Pro' ? 'Pro' : state.planName
-    }) : {}),
+    updateOrganization: async (updates) => {
+        try {
+            const currentOrg = get().currentOrganization;
+            if (!currentOrg) return;
+
+            // Optimistic Update
+            set({
+                currentOrganization: { ...currentOrg, ...updates },
+                planName: updates.subscriptionTier === 'Pro' ? 'Pro' : get().planName
+            });
+
+            await client.models.Organization.update({
+                id: currentOrg.id,
+                ...updates
+            });
+
+        } catch (e) {
+            console.error("Failed to update organization:", e);
+            // Rollback could be implemented here, but for now we just log
+        }
+    },
 
     inviteUser: async (email, role) => {
         const currentUser = get().currentUser;
