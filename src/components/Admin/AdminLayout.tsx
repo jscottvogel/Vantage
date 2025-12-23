@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, ChevronLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store';
@@ -9,7 +9,12 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
     const location = useLocation();
+    const currentUser = useStore(state => state.currentUser);
     const currentOrg = useStore(state => state.currentOrganization);
+
+    if (!currentUser || currentUser.role !== 'Admin') {
+        return <Navigate to="/" replace />;
+    }
 
     const navItems = [
         { name: 'Organization', path: '/admin/settings', icon: LayoutDashboard },

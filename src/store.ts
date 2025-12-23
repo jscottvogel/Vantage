@@ -94,7 +94,7 @@ export const useStore = create<AppState>((set, get) => ({
             const user = await AuthService.getCurrentUser();
 
             // Safety check for Amplify models
-            if (!client.models.User || !client.models.StrategicObjective) {
+            if (!client.models.User || !client.models.StrategicObjective || !client.models.Outcome || !client.models.KeyResult || !client.models.Initiative) {
                 console.warn("Amplify models not found. Ensure amplify_outputs.json is up to date and backend is deployed.");
                 set({ currentUser: user, users: [], isLoading: false });
                 return;
@@ -353,6 +353,10 @@ export const useStore = create<AppState>((set, get) => ({
         try {
             const tenantId = get().currentUser?.tenantId;
             if (!tenantId) throw new Error("No tenant ID found");
+
+            if (!client.models.StrategicObjective || !client.models.Outcome || !client.models.KeyResult || !client.models.Initiative) {
+                throw new Error("Required Amplify models are missing. Please deploy the backend.");
+            }
 
             const { data: newObj } = await client.models.StrategicObjective.create({
                 name,
