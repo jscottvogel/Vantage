@@ -23,17 +23,28 @@ export function OrganizationSignUp() {
         e.preventDefault();
         if (adminName.trim() && adminEmail.trim()) {
             try {
-                const result = await signupOrganization(orgName, adminEmail, adminName, password);
-                if (result === 'CONFIRM') {
-                    setStep('verify');
-                } else if (result === 'COMPLETE') {
-                    // If returns COMPLETE, maybe auto-confirmed or something, try login
+                // Determine if we are just logging in (user exists) or signing up
+                if (authError && authError.includes('already exists')) {
+                    // Try to login, if it fails with not confirmed, go to verify
                     await login(adminEmail, password);
+                } else {
+                    const result = await signupOrganization(orgName, adminEmail, adminName, password);
+                    if (result === 'CONFIRM') {
+                        setStep('verify');
+                        return;
+                    } else if (result === 'COMPLETE') {
+                        await login(adminEmail, password);
+                    }
+                }
+
+                // Check for UserNotConfirmed error after attempts
+                const currentError = useStore.getState().authError;
+                if (currentError && currentError.includes('not confirmed')) {
+                    setStep('verify');
                 }
             } catch (err) {
                 console.error("Unhandled signup error in component:", err);
             }
-            // If FAILED, stay on this step to show error
         }
     };
 
@@ -143,9 +154,19 @@ export function OrganizationSignUp() {
                                 </div>
                             )}
 
-                            <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || isLoading}>
-                                {isLoading ? 'Creating Account...' : 'Complete Setup'}
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || isLoading}>
+                                    {isLoading ? 'Creating Account...' : 'Complete Setup'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    className="text-xs text-muted-foreground"
+                                    onClick={() => setStep('verify')}
+                                >
+                                    Already have a code? Enter it here.
+                                </Button>
+                            </div>
                         </form>
                     )}
 
@@ -178,6 +199,15 @@ export function OrganizationSignUp() {
 
                             <Button className="w-full" disabled={!code.trim() || isLoading}>
                                 {isLoading ? 'Verifying...' : 'Verify Email'}
+                            </Button>
+
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="w-full text-xs"
+                                onClick={() => setStep('admin')}
+                            >
+                                Back
                             </Button>
                         </form>
                     )}

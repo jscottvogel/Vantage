@@ -212,8 +212,9 @@ export const useStore = create<AppState>((set, get) => ({
 
     login: async (email: string, password = 'password123') => {
         set({ isLoading: true, authError: null });
+        const cleanEmail = email.trim();
         try {
-            await AuthService.signInWithPassword(email, password);
+            await AuthService.signInWithPassword(cleanEmail, password);
             await get().checkSession();
         } catch (e: any) {
             console.error("Login failed:", e);
@@ -221,7 +222,7 @@ export const useStore = create<AppState>((set, get) => ({
                 // Force logout and retry login
                 try {
                     await AuthService.signOut();
-                    await AuthService.signInWithPassword(email, password);
+                    await AuthService.signInWithPassword(cleanEmail, password);
                     await get().checkSession();
                     return;
                 } catch (retryError: any) {
