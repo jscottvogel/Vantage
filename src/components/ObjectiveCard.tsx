@@ -97,16 +97,18 @@ export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
                                         const hasRisks = latestKRHeartbeat.risks && latestKRHeartbeat.risks.length > 0;
 
                                         return (
+
                                             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                                <div className={`w-2.5 h-2.5 rounded-full ${krHealthColor}`} title={`Health: ${latestKRHeartbeat.healthSignal}`} />
-                                                <span className="text-[10px] font-medium text-muted-foreground border px-1 rounded">
+                                                <div className={`w-10 h-10 rounded-full ${krHealthColor}`} title={`Health: ${latestKRHeartbeat.healthSignal}`} />
+                                                <span className="text-[20px] font-bold text-muted-foreground border px-2 py-1 rounded">
                                                     {latestKRHeartbeat.confidence?.substring(0, 1) || '-'}
                                                 </span>
                                                 {hasRisks && (
-                                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                                    <AlertTriangle className="w-12 h-12 text-amber-600" />
                                                 )}
                                             </div>
                                         );
+
                                     })()}
                                 </div>
                                 {firstKR.ownerId && (
