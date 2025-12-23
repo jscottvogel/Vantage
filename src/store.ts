@@ -91,122 +91,145 @@ export const useStore = create<AppState>((set, get) => ({
     authError: null,
 
     checkSession: async () => {
+        let authUser: User | null = null;
         try {
-            const user = await AuthService.getCurrentUser();
+            authUser = await AuthService.getCurrentUser();
+        } catch (e) {
+            console.error("Auth check failed completely", e);
+        }
 
+        if (!authUser) {
+            set({ currentUser: null, users: [], isLoading: false });
+            return;
+        }
+
+        // We have an authenticated user. Set them immediately to prevent login loops.
+        // We will update the full state with data later.
+        set({ currentUser: authUser });
+
+        try {
             // Safety check for Amplify models
             if (!client.models.User || !client.models.StrategicObjective || !client.models.Outcome || !client.models.KeyResult || !client.models.Initiative) {
                 console.warn("Amplify models not found. Ensure amplify_outputs.json is up to date and backend is deployed.");
-                set({ currentUser: user, users: [], isLoading: false });
+                set({ isLoading: false });
                 return;
             }
 
             // Fetch users for the tenant
             let team: User[] = [];
-            if (user?.tenantId) {
-                const { data: userRecords } = await client.models.User.list({
-                    filter: { tenantId: { eq: user.tenantId } }
-                });
+            let activeOrg = get().currentOrganization;
+            let objList: StrategicObjective[] = [];
 
-                team = userRecords.map(r => ({
-                    id: r.id,
-                    email: r.email,
-                    name: r.name || '',
-                    role: (r.role as 'Admin' | 'Member') || 'Member',
-                    tenantId: r.tenantId || '',
-                    status: (r.status as 'Active' | 'Invited') || 'Active'
-                }));
+            if (authUser.tenantId) {
+                try {
+                    const { data: userRecords } = await client.models.User.list({
+                        filter: { tenantId: { eq: authUser.tenantId } }
+                    });
 
-                // Self-healing: If current user is not in the DB
-                const currentUserInDb = team.find(u => u.email === user.email);
-                if (!currentUserInDb) {
-                    try {
-                        const { data: newUser } = await client.models.User.create({
-                            email: user.email,
-                            name: user.name,
-                            role: user.role,
-                            tenantId: user.tenantId,
-                            status: 'Active'
-                        });
+                    team = userRecords.map(r => ({
+                        id: r.id,
+                        email: r.email,
+                        name: r.name || '',
+                        role: (r.role as 'Admin' | 'Member') || 'Member',
+                        tenantId: r.tenantId || '',
+                        status: (r.status as 'Active' | 'Invited') || 'Active'
+                    }));
 
-                        if (newUser) {
-                            const mappedNewUser: User = {
-                                id: newUser.id,
-                                email: newUser.email,
-                                name: newUser.name || '',
-                                role: (newUser.role as 'Admin' | 'Member'),
-                                tenantId: newUser.tenantId || '',
+                    // Self-healing: If current user is not in the DB
+                    const currentUserInDb = team.find(u => u.email === authUser.email);
+                    if (!currentUserInDb) {
+                        try {
+                            const { data: newUser } = await client.models.User.create({
+                                email: authUser.email,
+                                name: authUser.name,
+                                role: authUser.role,
+                                tenantId: authUser.tenantId,
                                 status: 'Active'
-                            };
-                            team.push(mappedNewUser);
+                            });
+
+                            if (newUser) {
+                                const mappedNewUser: User = {
+                                    id: newUser.id,
+                                    email: newUser.email,
+                                    name: newUser.name || '',
+                                    role: (newUser.role as 'Admin' | 'Member'),
+                                    tenantId: newUser.tenantId || '',
+                                    status: 'Active'
+                                };
+                                team.push(mappedNewUser);
+                            }
+                        } catch (err) {
+                            console.error("Failed to auto-create user record:", err);
                         }
-                    } catch (err) {
-                        console.error("Failed to auto-create user record:", err);
                     }
-                }
 
-                // Fetch Organization Details
-                let activeOrg = get().currentOrganization;
-                if (user.tenantId && client.models.Organization) {
-                    try {
-                        const { data: orgData } = await client.models.Organization.get({ id: user.tenantId });
-                        if (orgData) {
-                            activeOrg = {
-                                id: orgData.id,
-                                name: orgData.name,
-                                subscriptionTier: (orgData.subscriptionTier as any) || 'Free',
-                                domain: orgData.domain || undefined,
-                                createdAt: orgData.createdAt,
-                                updatedAt: orgData.updatedAt
-                            };
-                        } else {
-                            // Auto-create Organization if missing (First Login)
-                            const orgName = (user as any).orgName;
-                            if (orgName) {
-                                console.log("Organization record missing. Auto-creating for:", orgName);
-                                const { data: newOrg } = await client.models.Organization.create({
-                                    id: user.tenantId,
-                                    name: orgName,
-                                    subscriptionTier: 'Free'
-                                });
+                    // Fetch Organization Details
+                    if (client.models.Organization) {
+                        try {
+                            const { data: orgData } = await client.models.Organization.get({ id: authUser.tenantId });
+                            if (orgData) {
+                                activeOrg = {
+                                    id: orgData.id,
+                                    name: orgData.name,
+                                    subscriptionTier: (orgData.subscriptionTier as any) || 'Free',
+                                    domain: orgData.domain || undefined,
+                                    createdAt: orgData.createdAt,
+                                    updatedAt: orgData.updatedAt
+                                };
+                            } else {
+                                // Auto-create Organization if missing (First Login)
+                                const orgName = (authUser as any).orgName;
+                                if (orgName) {
+                                    console.log("Organization record missing. Auto-creating for:", orgName);
+                                    const { data: newOrg } = await client.models.Organization.create({
+                                        id: authUser.tenantId,
+                                        name: orgName,
+                                        subscriptionTier: 'Free'
+                                    });
 
-                                if (newOrg) {
-                                    activeOrg = {
-                                        id: newOrg.id,
-                                        name: newOrg.name,
-                                        subscriptionTier: 'Free',
-                                        createdAt: newOrg.createdAt,
-                                        updatedAt: newOrg.updatedAt
-                                    };
+                                    if (newOrg) {
+                                        activeOrg = {
+                                            id: newOrg.id,
+                                            name: newOrg.name,
+                                            subscriptionTier: 'Free',
+                                            createdAt: newOrg.createdAt,
+                                            updatedAt: newOrg.updatedAt
+                                        };
+                                    }
                                 }
                             }
+                        } catch (err) {
+                            console.error("Failed to load or create organization:", err);
                         }
-                    } catch (err) {
-                        console.error("Failed to load or create organization:", err);
                     }
+
+                    // Fetch Objectives with nested relations
+                    const { data: fetchedObjs } = await client.models.StrategicObjective.list({
+                        filter: { tenantId: { eq: authUser.tenantId } },
+                        selectionSet: [
+                            'id', 'name', 'ownerId', 'strategicValue', 'targetDate', 'status', 'currentHealth', 'riskScore', 'tenantId', 'createdAt', 'updatedAt',
+                            'heartbeats.*',
+                            'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.ownerId', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
+                            'outcomes.keyResults.id', 'outcomes.keyResults.description', 'outcomes.keyResults.ownerId', 'outcomes.keyResults.startDate', 'outcomes.keyResults.targetDate', 'outcomes.keyResults.heartbeatCadence.*',
+                            'outcomes.keyResults.heartbeats.*',
+                            'outcomes.keyResults.initiatives.id', 'outcomes.keyResults.initiatives.name', 'outcomes.keyResults.initiatives.ownerId', 'outcomes.keyResults.initiatives.link', 'outcomes.keyResults.initiatives.status', 'outcomes.keyResults.initiatives.startDate', 'outcomes.keyResults.initiatives.targetEndDate',
+                            'outcomes.keyResults.initiatives.heartbeats.*'
+                        ]
+                    });
+                    objList = fetchedObjs as unknown as StrategicObjective[];
+
+                } catch (dataError) {
+                    console.error("Data fetching partially failed", dataError);
+                    // Do not unset currentUser here
                 }
-
-                // Fetch Objectives with nested relations
-                const { data: objList } = await client.models.StrategicObjective.list({
-                    filter: { tenantId: { eq: user.tenantId } },
-                    selectionSet: [
-                        'id', 'name', 'ownerId', 'strategicValue', 'targetDate', 'status', 'currentHealth', 'riskScore', 'tenantId', 'createdAt', 'updatedAt',
-                        'heartbeats.*',
-                        'outcomes.id', 'outcomes.goal', 'outcomes.benefit', 'outcomes.ownerId', 'outcomes.startDate', 'outcomes.targetDate', 'outcomes.heartbeatCadence.*',
-                        'outcomes.keyResults.id', 'outcomes.keyResults.description', 'outcomes.keyResults.ownerId', 'outcomes.keyResults.startDate', 'outcomes.keyResults.targetDate', 'outcomes.keyResults.heartbeatCadence.*',
-                        'outcomes.keyResults.heartbeats.*',
-                        'outcomes.keyResults.initiatives.id', 'outcomes.keyResults.initiatives.name', 'outcomes.keyResults.initiatives.ownerId', 'outcomes.keyResults.initiatives.link', 'outcomes.keyResults.initiatives.status', 'outcomes.keyResults.initiatives.startDate', 'outcomes.keyResults.initiatives.targetEndDate',
-                        'outcomes.keyResults.initiatives.heartbeats.*'
-                    ]
-                });
-
-                set({ currentUser: user, users: team, currentOrganization: activeOrg, objectives: objList as unknown as StrategicObjective[], isLoading: false });
-            } else {
-                set({ currentUser: user, users: team, isLoading: false });
             }
+
+            set({ currentUser: authUser, users: team, currentOrganization: activeOrg, objectives: objList, isLoading: false });
+
         } catch (e) {
-            console.error("Session check failed", e);
-            set({ currentUser: null, users: [], isLoading: false });
+            console.error("Session check major failure", e);
+            // Even in major failure, if we have authUser, keep them logged in
+            set({ currentUser: authUser, isLoading: false });
         }
     },
 
