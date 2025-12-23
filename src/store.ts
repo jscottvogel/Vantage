@@ -495,96 +495,191 @@ export const useStore = create<AppState>((set, get) => ({
         }
     },
 
-    addInitiative: (objectiveId: string, krId: string, initiative: Initiative) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out => ({
-                    ...out,
-                    keyResults: out.keyResults.map(kr =>
-                        kr.id === krId ? {
-                            ...kr,
-                            initiatives: [...kr.initiatives, initiative]
-                        } : kr
+    addInitiative: async (objectiveId: string, krId: string, initiative: Initiative) => {
+        try {
+            const { data: newInit } = await client.models.Initiative.create({
+                keyResultId: krId,
+                name: initiative.name,
+                ownerId: initiative.ownerId,
+                link: initiative.link,
+                status: initiative.status,
+                startDate: initiative.startDate,
+                targetEndDate: initiative.targetEndDate,
+                heartbeatCadence: initiative.heartbeatCadence
+            });
+
+            if (newInit) {
+                const mappedInit: Initiative = {
+                    ...initiative,
+                    id: newInit.id,
+                    heartbeats: []
+                };
+
+                set(state => ({
+                    objectives: state.objectives.map(obj =>
+                        obj.id === objectiveId ? {
+                            ...obj,
+                            outcomes: obj.outcomes.map(out => ({
+                                ...out,
+                                keyResults: out.keyResults.map(kr =>
+                                    kr.id === krId ? {
+                                        ...kr,
+                                        initiatives: [...kr.initiatives, mappedInit]
+                                    } : kr
+                                )
+                            }))
+                        } : obj
                     )
-                }))
-            } : obj
-        )
-    })),
+                }));
+            }
+        } catch (e) {
+            console.error("Failed to add initiative:", e);
+        }
+    },
 
-    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out => ({
-                    ...out,
-                    keyResults: out.keyResults.map(kr =>
-                        kr.id === krId ? {
-                            ...kr,
-                            initiatives: kr.initiatives.filter(i => i.id !== initiativeId)
-                        } : kr
+    removeInitiative: async (objectiveId: string, krId: string, initiativeId: string) => {
+        try {
+            await client.models.Initiative.delete({ id: initiativeId });
+            set(state => ({
+                objectives: state.objectives.map(obj =>
+                    obj.id === objectiveId ? {
+                        ...obj,
+                        outcomes: obj.outcomes.map(out => ({
+                            ...out,
+                            keyResults: out.keyResults.map(kr =>
+                                kr.id === krId ? {
+                                    ...kr,
+                                    initiatives: kr.initiatives.filter(i => i.id !== initiativeId)
+                                } : kr
+                            )
+                        }))
+                    } : obj
+                )
+            }));
+        } catch (e) {
+            console.error("Failed to remove initiative:", e);
+        }
+    },
+
+    updateInitiative: async (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => {
+        try {
+            await client.models.Initiative.update({
+                id: initiativeId,
+                name: updates.name,
+                ownerId: updates.ownerId,
+                link: updates.link,
+                status: updates.status,
+                startDate: updates.startDate,
+                targetEndDate: updates.targetEndDate,
+                // heartbeatCadence: updates.heartbeatCadence // Add if supported by schema update
+            });
+
+            set(state => ({
+                objectives: state.objectives.map(obj =>
+                    obj.id === objectiveId ? {
+                        ...obj,
+                        outcomes: obj.outcomes.map(out => ({
+                            ...out,
+                            keyResults: out.keyResults.map(kr =>
+                                kr.id === krId ? {
+                                    ...kr,
+                                    initiatives: kr.initiatives.map(i => i.id === initiativeId ? { ...i, ...updates } : i)
+                                } : kr
+                            )
+                        }))
+                    } : obj
+                )
+            }));
+        } catch (e) {
+            console.error("Failed to update initiative:", e);
+        }
+    },
+
+    addKeyResult: async (objectiveId: string, outcomeId: string, keyResult: KeyResult) => {
+        try {
+            const { data: newKr } = await client.models.KeyResult.create({
+                outcomeId: outcomeId,
+                description: keyResult.description,
+                ownerId: keyResult.ownerId,
+                startDate: keyResult.startDate,
+                targetDate: keyResult.targetDate,
+                heartbeatCadence: keyResult.heartbeatCadence
+            });
+
+            if (newKr) {
+                const mappedKr: KeyResult = {
+                    ...keyResult,
+                    id: newKr.id,
+                    initiatives: [],
+                    heartbeats: []
+                };
+
+                set(state => ({
+                    objectives: state.objectives.map(obj =>
+                        obj.id === objectiveId ? {
+                            ...obj,
+                            outcomes: obj.outcomes.map(out =>
+                                out.id === outcomeId ? {
+                                    ...out,
+                                    keyResults: [...out.keyResults, mappedKr]
+                                } : out
+                            )
+                        } : obj
                     )
-                }))
-            } : obj
-        )
-    })),
+                }));
+            }
+        } catch (e) {
+            console.error("Failed to add key result:", e);
+        }
+    },
 
-    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: Partial<Initiative>) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out => ({
-                    ...out,
-                    keyResults: out.keyResults.map(kr =>
-                        kr.id === krId ? {
-                            ...kr,
-                            initiatives: kr.initiatives.map(i => i.id === initiativeId ? { ...i, ...updates } : i)
-                        } : kr
-                    )
-                }))
-            } : obj
-        )
-    })),
+    updateKeyResult: async (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => {
+        try {
+            await client.models.KeyResult.update({
+                id: krId,
+                description: updates.description,
+                ownerId: updates.ownerId,
+                startDate: updates.startDate,
+                targetDate: updates.targetDate,
+                // heartbeatCadence: updates.heartbeatCadence
+            });
 
-    addKeyResult: (objectiveId: string, outcomeId: string, keyResult: KeyResult) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out =>
-                    out.id === outcomeId ? {
-                        ...out,
-                        keyResults: [...out.keyResults, keyResult]
-                    } : out
+            set(state => ({
+                objectives: state.objectives.map(obj =>
+                    obj.id === objectiveId ? {
+                        ...obj,
+                        outcomes: obj.outcomes.map(out =>
+                            out.id === outcomeId ? {
+                                ...out,
+                                keyResults: out.keyResults.map(kr => kr.id === krId ? { ...kr, ...updates } : kr)
+                            } : out
+                        )
+                    } : obj
                 )
-            } : obj
-        )
-    })),
+            }));
+        } catch (e) {
+            console.error("Failed to update key result:", e);
+        }
+    },
 
-    updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: Partial<KeyResult>) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out =>
-                    out.id === outcomeId ? {
-                        ...out,
-                        keyResults: out.keyResults.map(kr => kr.id === krId ? { ...kr, ...updates } : kr)
-                    } : out
+    removeKeyResult: async (objectiveId: string, outcomeId: string, krId: string) => {
+        try {
+            await client.models.KeyResult.delete({ id: krId });
+            set(state => ({
+                objectives: state.objectives.map(obj =>
+                    obj.id === objectiveId ? {
+                        ...obj,
+                        outcomes: obj.outcomes.map(out =>
+                            out.id === outcomeId ? {
+                                ...out,
+                                keyResults: out.keyResults.filter(kr => kr.id !== krId)
+                            } : out
+                        )
+                    } : obj
                 )
-            } : obj
-        )
-    })),
-
-    removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => set(state => ({
-        objectives: state.objectives.map(obj =>
-            obj.id === objectiveId ? {
-                ...obj,
-                outcomes: obj.outcomes.map(out =>
-                    out.id === outcomeId ? {
-                        ...out,
-                        keyResults: out.keyResults.filter(kr => kr.id !== krId)
-                    } : out
-                )
-            } : obj
-        )
-    }))
+            }));
+        } catch (e) {
+            console.error("Failed to remove key result:", e);
+        }
+    }
 }));
