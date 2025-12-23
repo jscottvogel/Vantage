@@ -22,12 +22,16 @@ export function OrganizationSignUp() {
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (adminName.trim() && adminEmail.trim()) {
-            const result = await signupOrganization(orgName, adminEmail, adminName, password);
-            if (result === 'CONFIRM') {
-                setStep('verify');
-            } else if (result === 'COMPLETE') {
-                // If returns COMPLETE, maybe auto-confirmed or something, try login
-                await login(adminEmail, password);
+            try {
+                const result = await signupOrganization(orgName, adminEmail, adminName, password);
+                if (result === 'CONFIRM') {
+                    setStep('verify');
+                } else if (result === 'COMPLETE') {
+                    // If returns COMPLETE, maybe auto-confirmed or something, try login
+                    await login(adminEmail, password);
+                }
+            } catch (err) {
+                console.error("Unhandled signup error in component:", err);
             }
             // If FAILED, stay on this step to show error
         }
@@ -133,8 +137,9 @@ export function OrganizationSignUp() {
                             </div>
 
                             {authError && (
-                                <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm font-medium border border-red-200">
-                                    {authError}
+                                <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm font-medium border border-destructive/20 flex items-start gap-2">
+                                    <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
+                                    <span>{authError}</span>
                                 </div>
                             )}
 
