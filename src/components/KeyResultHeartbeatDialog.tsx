@@ -18,7 +18,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
     // Deep find KeyResult
     let keyResult: any;
     if (objective) {
-        for (const outcome of objective.outcomes) {
+        for (const outcome of objective.outcomes || []) {
             const found = outcome.keyResults.find(k => k.id === keyResultId);
             if (found) {
                 keyResult = found;

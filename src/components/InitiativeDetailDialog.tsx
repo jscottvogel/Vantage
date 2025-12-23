@@ -24,8 +24,8 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
     // Deep find initiative
     let initiative: Initiative | undefined;
     if (objective) {
-        for (const outcome of objective.outcomes) {
-            for (const kr of outcome.keyResults) {
+        for (const outcome of objective.outcomes || []) {
+            for (const kr of outcome.keyResults || []) {
                 const found = kr.initiatives.find(i => i.id === initiativeId);
                 if (found) {
                     initiative = found;

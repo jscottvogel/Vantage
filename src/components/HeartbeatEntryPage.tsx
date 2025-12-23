@@ -17,7 +17,7 @@ export function HeartbeatEntryPage() {
 
     if (type === 'kr') {
         for (const obj of store.objectives) {
-            for (const out of obj.outcomes) {
+            for (const out of obj.outcomes || []) {
                 const foundKR = out.keyResults.find(kr => kr.id === id);
                 if (foundKR) {
                     title = "Key Result Heartbeat";
@@ -30,8 +30,8 @@ export function HeartbeatEntryPage() {
         }
     } else if (type === 'initiative') {
         for (const obj of store.objectives) {
-            for (const out of obj.outcomes) {
-                for (const kr of out.keyResults) {
+            for (const out of obj.outcomes || []) {
+                for (const kr of out.keyResults || []) {
                     const foundInit = kr.initiatives.find(i => i.id === id);
                     if (foundInit) {
                         title = "Initiative Heartbeat";
