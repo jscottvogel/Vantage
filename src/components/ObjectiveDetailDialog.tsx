@@ -345,47 +345,58 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
                                                     <div className="text-sm text-muted-foreground italic">No initiatives defined.</div>
                                                 ) : (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        {kr.initiatives.map((init) => (
-                                                            <div key={init.id}
-                                                                className="flex items-center justify-between p-3 border rounded hover:bg-muted/50 cursor-pointer transition-colors group relative"
-                                                                onClick={() => onSelectInitiative(init.id)}
-                                                            >
-                                                                <div className="space-y-1">
-                                                                    <div className="font-medium text-sm pr-6">{init.name}</div>
-                                                                    <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                                                                        <span>Owner: {store.users.find(u => u.id === init.ownerId)?.name || init.ownerId}</span>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            className="h-4 p-0 text-[10px] text-blue-600 hover:text-blue-800"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleNotifyOwner('initiative', init.id, init.name, init.ownerId);
-                                                                            }}
-                                                                        >
-                                                                            Notify Owner
-                                                                        </Button>
-                                                                    </div>
-                                                                    <div className="flex gap-2">
-                                                                        <Badge variant="outline" className="text-[10px] h-5">{init.status}</Badge>
-                                                                        {init.heartbeats.length > 0 && (
-                                                                            <Badge variant="secondary" className="text-[10px] h-5">
-                                                                                {init.heartbeats.length} Signals
-                                                                            </Badge>
+                                                        {kr.initiatives.map((init) => {
+                                                            const latestInitHB = getLatestHeartbeat(init.heartbeats);
+                                                            return (
+                                                                <div key={init.id}
+                                                                    className="flex items-center justify-between p-3 border rounded hover:bg-muted/50 cursor-pointer transition-colors group relative"
+                                                                    onClick={() => onSelectInitiative(init.id)}
+                                                                >
+                                                                    <div className="space-y-1">
+                                                                        <div className="font-medium text-sm pr-6">{init.name}</div>
+                                                                        <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                                                            <span>Owner: {store.users.find(u => u.id === init.ownerId)?.name || init.ownerId}</span>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="h-4 p-0 text-[10px] text-blue-600 hover:text-blue-800"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleNotifyOwner('initiative', init.id, init.name, init.ownerId);
+                                                                                }}
+                                                                            >
+                                                                                Notify Owner
+                                                                            </Button>
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <Badge variant="outline" className="text-[10px] h-5">{init.status}</Badge>
+                                                                            {init.heartbeats.length > 0 && (
+                                                                                <Badge variant="secondary" className="text-[10px] h-5">
+                                                                                    {init.heartbeats.length} Signals
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
+                                                                        {latestInitHB && (
+                                                                            <div className="flex items-center gap-2 mt-1 pt-1 border-t border-dashed">
+                                                                                {healthIcon(latestInitHB.healthSignal)}
+                                                                                <Badge variant={latestInitHB.confidence === 'High' ? 'default' : latestInitHB.confidence === 'Medium' ? 'secondary' : 'destructive'} className="text-[10px] h-5">
+                                                                                    Conf: {latestInitHB.confidence || 'N/A'}
+                                                                                </Badge>
+                                                                            </div>
                                                                         )}
                                                                     </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                            onClick={(e) => handleDeleteInitiative(kr.id, init.id, e)}
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </button>
+                                                                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <button
-                                                                        className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                        onClick={(e) => handleDeleteInitiative(kr.id, init.id, e)}
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4" />
-                                                                    </button>
-                                                                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
