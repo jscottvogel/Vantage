@@ -2,7 +2,7 @@
 import type { StrategicObjective } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Target, Briefcase, Layers } from 'lucide-react';
+import { Target, Briefcase, Layers, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
 
@@ -74,11 +74,41 @@ export function ObjectiveCard({ objective, onDrillDown }: ObjectiveCardProps) {
                     {firstKR && (
                         <div>
                             <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Key Result</span>
-                            <div className="flex flex-col">
-                                <p className="text-foreground/90 line-clamp-1 flex items-center">
-                                    <Target className="w-3 h-3 mr-1 text-primary" />
-                                    {firstKR.description}
-                                </p>
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-foreground/90 line-clamp-1 flex items-center">
+                                        <Target className="w-3 h-3 mr-1 text-primary" />
+                                        {firstKR.description}
+                                    </p>
+                                    {/* KR Health Indicators */}
+                                    {(() => {
+                                        const latestKRHeartbeat = firstKR.heartbeats && firstKR.heartbeats.length > 0
+                                            ? firstKR.heartbeats[firstKR.heartbeats.length - 1]
+                                            : null;
+
+                                        if (!latestKRHeartbeat) return null;
+
+                                        const krHealthColor = {
+                                            'green': 'bg-green-500',
+                                            'yellow': 'bg-amber-500',
+                                            'red': 'bg-red-500',
+                                        }[latestKRHeartbeat.healthSignal] || 'bg-gray-300';
+
+                                        const hasRisks = latestKRHeartbeat.risks && latestKRHeartbeat.risks.length > 0;
+
+                                        return (
+                                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <div className={`w-2.5 h-2.5 rounded-full ${krHealthColor}`} title={`Health: ${latestKRHeartbeat.healthSignal}`} />
+                                                <span className="text-[10px] font-medium text-muted-foreground border px-1 rounded">
+                                                    {latestKRHeartbeat.confidence?.substring(0, 1) || '-'}
+                                                </span>
+                                                {hasRisks && (
+                                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                                 {firstKR.ownerId && (
                                     <p className="text-xs text-muted-foreground ml-4">
                                         Owner: {getOwnerName(firstKR.ownerId)}
