@@ -32,10 +32,16 @@ export function Dashboard() {
                     <p className="text-muted-foreground">
                         You don't have any objectives tracked yet. Define your first strategic objective to start establishing delivery truth.
                     </p>
-                    <Button size="lg" onClick={() => setCreateOpen(true)}>
-                        <Plus className="w-5 h-5 mr-2" />
-                        Create First Objective
-                    </Button>
+                    <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
+                        <Button size="lg" className="w-full" onClick={() => setCreateOpen(true)}>
+                            <Plus className="w-5 h-5 mr-2" />
+                            Create First Objective
+                        </Button>
+                        <Button variant="ghost" className="w-full" onClick={logout}>
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Sign Out
+                        </Button>
+                    </div>
                 </div>
                 {isCreateOpen && <CreateObjectiveDialog onClose={() => setCreateOpen(false)} />}
             </div>
