@@ -102,7 +102,12 @@ export interface Heartbeat {
 
 // Support Types
 export interface CadenceSchedule { frequency: string; dueDay: string; dueTime: string; }
-export interface LeadingIndicator { name: string; value: number; previousValue?: number; trend?: string; }
+export interface LeadingIndicator {
+    name: string;
+    value: number;
+    previousValue?: number;
+    trend?: string;
+}
 export interface Evidence { type: string; description?: string; sourceLink?: string; }
 export interface Risk { description: string; severity: string; mitigation?: string; }
 export interface OwnerAttestation { attestedBy: string; attestedOn: string; }
@@ -115,7 +120,7 @@ interface AppState {
 
     // Data State (Scoped to currentOrg)
     objectives: StrategicObjective[];
-    users: any[]; // Team Members (Legacy UI Compatibility)
+    users: any[]; // Team Members (Partial User type)
 
     // UI State
     isLoading: boolean;
@@ -156,7 +161,8 @@ export const useStore = create<AppState>((set, get) => ({
         set({ isLoading: true });
         try {
             const user = await AuthService.getCurrentUser();
-            if (!user) {
+            // user.id comes from AuthService returning User type
+            if (!user || !user.id) {
                 set({ userProfile: null, memberships: [], currentOrg: null, isLoading: false });
                 return;
             }
@@ -164,17 +170,17 @@ export const useStore = create<AppState>((set, get) => ({
             try {
                 // 1. Fetch UserProfile
                 const { data: profileList } = await client.models.UserProfile.list({
-                    filter: { userSub: { eq: user.userId } }
+                    filter: { userSub: { eq: user.id } }
                 });
                 const userProfile = profileList[0] || null;
 
                 // 2. Fetch Memberships
                 const { data: memberList } = await client.models.Membership.list({
-                    filter: { userSub: { eq: user.userId } },
-                    selectionSet: ['id', 'orgId', 'role', 'status', 'organization.*']
+                    filter: { userSub: { eq: user.id } },
+                    selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
                 });
 
-                const memberships = memberList.map(m => ({
+                const memberships: Membership[] = memberList.map(m => ({
                     id: m.id,
                     orgId: m.orgId,
                     userSub: m.userSub,
@@ -184,8 +190,8 @@ export const useStore = create<AppState>((set, get) => ({
                         id: m.organization.id,
                         name: m.organization.name,
                         slug: m.organization.slug,
-                        status: m.organization.status,
-                        subscriptionTier: m.organization.subscriptionTier
+                        status: m.organization.status || 'Active',
+                        subscriptionTier: m.organization.subscriptionTier || 'Free'
                     } : undefined
                 }));
 
@@ -289,6 +295,7 @@ export const useStore = create<AppState>((set, get) => ({
 
         try {
             // Update filtering to use 'orgId' (Standardized)
+            // Using cast to avoid strict type mismatch on complex nested objects during draft phase
             const { data: objs } = await client.models.StrategicObjective.list({
                 filter: { orgId: { eq: org.id } },
                 selectionSet: [
@@ -382,13 +389,13 @@ export const useStore = create<AppState>((set, get) => ({
         }
     },
 
-    updateUserRole: async (userId, role) => {
+    updateUserRole: async (_userId, _role) => {
         // Placeholder or implement via manageOrg or direct Membership update
     },
-    removeUser: async (userId) => {
+    removeUser: async (_userId) => {
         // Placeholder
     },
-    addHeartbeat: async (targetId, targetType, heartbeat) => {
+    addHeartbeat: async (_targetId, _targetType, _heartbeat) => {
         // Placeholder
     }
 }));
