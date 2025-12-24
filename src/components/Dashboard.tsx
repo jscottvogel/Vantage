@@ -8,12 +8,12 @@ import { CreateObjectiveDialog } from './CreateObjectiveDialog';
 import { TeamDialog } from './TeamDialog';
 import { ObjectiveDetailDialog } from './ObjectiveDetailDialog';
 import { InitiativeDetailDialog } from './InitiativeDetailDialog';
+import { OrgSelector } from './OrgSelector';
 
 export function Dashboard() {
     const objectives = useStore(state => state.objectives);
-    // updates removed from store
     const logout = useStore(state => state.logout);
-    const user = useStore(state => state.currentUser);
+    const user = useStore(state => state.userProfile);
 
     // Modal State
     const [isCreateOpen, setCreateOpen] = useState(false);
@@ -28,7 +28,7 @@ export function Dashboard() {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
                 <div className="max-w-lg text-center space-y-6">
-                    <h1 className="text-3xl font-bold">Welcome to Vantage, {user?.name}</h1>
+                    <h1 className="text-3xl font-bold">Welcome to Vantage, {user?.displayName}</h1>
                     <p className="text-muted-foreground">
                         You don't have any objectives tracked yet. Define your first strategic objective to start establishing delivery truth.
                     </p>
@@ -58,9 +58,12 @@ export function Dashboard() {
         <div className="min-h-screen bg-background p-6 lg:p-10 space-y-8">
             {/* Header Section */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Strategic Dashboard</h1>
-                    <p className="text-muted-foreground text-sm">Overview for {user?.name} • {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <div className="space-y-1 flex flex-col md:flex-row md:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Strategic Dashboard</h1>
+                        <p className="text-muted-foreground text-sm">Overview for {user?.displayName} • {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <OrgSelector />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-foreground">

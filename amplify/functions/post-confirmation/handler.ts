@@ -4,79 +4,80 @@ import { marshall } from '@aws-sdk/util-dynamodb';
 
 const client = new DynamoDBClient({});
 
+function generateSlug(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 10000);
+}
+
 export const handler: PostConfirmationTriggerHandler = async (event) => {
     try {
         const { userAttributes } = event.request;
         const { email, name, sub } = userAttributes;
 
-        // Custom attributes
-        const tenantId = userAttributes['locale']; // We stored tenantId in locale
-        const orgName = userAttributes['nickname']; // We stored orgName in nickname
-        const role = userAttributes['profile'] || 'Admin';
-
-        if (!tenantId || !orgName) {
-            console.log("No tenantId or orgName found, skipping organization creation (likely inviting user flow or login)");
-            // If it's an invited user, we might still want to create the User record if not exists? 
-            // But they should already have a tenantId.
-            // If it is just a normal signup without these, we might skip.
-            // But for this "Organization First" flow, these are required for the Admin.
-            return event;
-        }
+        // Attributes passed from Client during Step 1 of Sign Up
+        const tenantId = userAttributes['locale'];
+        const orgName = userAttributes['nickname'];
+        // We assume the first user is the Owner
 
         const now = new Date().toISOString();
 
-        // 1. Create Organization
-        // We use the tenantId as the Organization ID
-        const orgParams = {
-            TableName: process.env.ORG_TABLE,
+        // 1. Create UserProfile (Always)
+        const userProfileParams = {
+            TableName: process.env.USER_PROFILE_TABLE,
             Item: marshall({
-                id: tenantId,
-                name: orgName,
-                subscriptionTier: 'Free',
+                userSub: sub,
+                email: email,
+                displayName: name,
                 createdAt: now,
                 updatedAt: now,
+                owner: `${sub}::${sub}` // for allow.owner()
             })
         };
 
         try {
-            await client.send(new PutItemCommand(orgParams));
-            console.log(`Created Organization: ${orgName} (${tenantId})`);
+            await client.send(new PutItemCommand(userProfileParams));
+            console.log(`Created UserProfile: ${email}`);
         } catch (err) {
-            console.error("Failed to create Organization:", err);
-            // We might want to fail the sign up if this fails? 
-            // But post-confirmation can't really block sign up success ultimately, just side effects.
+            console.error("Failed to create UserProfile:", err);
+            // Non-fatal if exists?
         }
 
-        // 2. Create User
-        // The ID of the user record should match the Cognito Sub for easier lookup, or we can just let it be random and store the sub. 
-        // But the schema defined 'User' with 'email' as required, 'id' is auto.
-        // Let's use the Cognito 'sub' as the User 'id' to keep them linked 1:1 easily.
+        // 2. Create Organization & Membership (If this was an Org Sign Up)
+        if (tenantId && orgName) {
+            const orgSlug = generateSlug(orgName);
 
-        const userParams = {
-            TableName: process.env.USER_TABLE,
-            Item: marshall({
-                id: sub, // Use Cognito Sub as ID
-                email: email,
-                name: name,
-                role: role,
-                tenantId: tenantId,
-                status: 'Active',
-                createdAt: now,
-                updatedAt: now,
-                owner: `${sub}::${sub}` // Generic owner field if needed for auth rules. 
-                // Amplify Gen 2 'owner' auth usually checks the 'owner' field. 
-                // By default it stores "sub::username" or similar. 
-                // For now let's hope the default 'allow.owner()' works if we just create the record. 
-                // Actually, if we create it via Lambda, we should set the owner field manually if we want the user to be able to read it immediately.
-                // The format is usually `<sub or username>`.
-            })
-        };
+            const orgParams = {
+                TableName: process.env.ORG_TABLE,
+                Item: marshall({
+                    id: tenantId, // orgId
+                    name: orgName,
+                    slug: orgSlug,
+                    subscriptionTier: 'Free',
+                    status: 'Active',
+                    createdBySub: sub,
+                    createdAt: now,
+                    updatedAt: now,
+                })
+            };
 
-        try {
-            await client.send(new PutItemCommand(userParams));
-            console.log(`Created User: ${email}`);
-        } catch (err) {
-            console.error("Failed to create User:", err);
+            const membershipParams = {
+                TableName: process.env.MEMBERSHIP_TABLE,
+                Item: marshall({
+                    id: `${tenantId}#${sub}`, // Composite ID for simple GET
+                    orgId: tenantId,
+                    userSub: sub,
+                    role: 'Owner',
+                    status: 'Active',
+                    createdAt: now,
+                    updatedAt: now,
+                    owner: `${sub}::${sub}` // I own my membership
+                })
+            };
+
+            await client.send(new PutItemCommand(orgParams));
+            console.log(`Created Organization: ${orgName}`);
+
+            await client.send(new PutItemCommand(membershipParams));
+            console.log(`Created Membership for Owner`);
         }
 
     } catch (error) {

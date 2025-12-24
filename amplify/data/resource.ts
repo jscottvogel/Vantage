@@ -1,53 +1,124 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { sendNotification } from '../functions/send-notification/resource';
+import { manageOrg } from '../functions/manage-org/resource';
+
+/**
+ * VANTAGE MULTI-TENANT SCHEMA
+ * 
+ * Security Model:
+ * - All "Tenant Data" (Objectives, etc.) is scoped by `orgId`.
+ * - Authorization Enforcement (MVP):
+ *   - Ideally, we would use Pipeline Resolvers to check Membership table for every request.
+ *   - Since Amplify Gen 2 declarative auth is limited without Custom Claims, we rely on:
+ *     1. `allow.authenticated()` for data access (MVP compromise).
+ *     2. Strict business logic in Custom Mutation Handlers for Membership/Invite management.
+ *     3. Frontend "Gatekeeper" logic (Critical must be moved to backend for Post-MVP).
+ * 
+ * Tenants:
+ * - Organization is the root of tenancy.
+ * - Membership links UserProfile <-> Organization with a Role.
+ */
 
 const schema = a.schema({
+    // --- SHARED TYPES ---
     NotificationResponse: a.customType({
         success: a.boolean().required(),
         message: a.string(),
     }),
-    User: a.model({
+
+    CadenceSchedule: a.customType({
+        frequency: a.string().required(),
+        dueDay: a.string().required(),
+        dueTime: a.string().required(),
+    }),
+
+    // --- CORE IDENTITY & TENANCY ---
+
+    UserProfile: a.model({
+        userSub: a.id().required(), // Matches Cognito Sub
         email: a.string().required(),
-        name: a.string(),
-        role: a.string(),
-        tenantId: a.string(),
-        status: a.string(),
+        displayName: a.string(),
+        createdAt: a.string(),
+        // Relations
+        memberships: a.hasMany('Membership', 'userSub')
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .authorization(allow => [
+            allow.owner('userSub'), // Users own their profile
+            allow.authenticated() // Viewable by others (for team UI)
+        ]),
 
     Organization: a.model({
         name: a.string().required(),
-        subscriptionTier: a.string(),
-        domain: a.string(),
-        // We will use the 'id' of this model as the tenantId
+        slug: a.string().required(), // Unique URL identifier
+        subscriptionTier: a.string().default('Free'),
+        status: a.string().default('Active'),
+        createdBySub: a.string(),
+
+        members: a.hasMany('Membership', 'orgId'),
+        invites: a.hasMany('Invite', 'orgId'),
+        objectives: a.hasMany('StrategicObjective', 'orgId')
     })
-        .authorization(allow => [allow.authenticated()]), // Any auth user can read (we filter by ID in app)
+        .secondaryIndexes((index) => [index('slug')])
+        .authorization(allow => [
+            allow.authenticated() // MVP: Auth users can resolve orgs (validated by membership downstream)
+        ]),
 
-    // Custom Type for Schedules
-    CadenceSchedule: a.customType({
-        frequency: a.string().required(), // daily, weekly, etc
-        dueDay: a.string().required(),   // Monday, Friday
-        dueTime: a.string().required(),  // 17:00
-    }),
+    Membership: a.model({
+        orgId: a.id().required(),
+        organization: a.belongsTo('Organization', 'orgId'),
 
-    // Top Level Objective
+        userSub: a.id().required(),
+        user: a.belongsTo('UserProfile', 'userSub'),
+
+        role: a.string().required(), // Owner, Admin, Member, BillingAdmin
+        status: a.string().default('Active'), // Active, Suspended
+    })
+        .secondaryIndexes((index) => [
+            index('userSub'), // efficiently find my orgs
+            index('orgId')    // efficiently find org members
+        ])
+        .authorization(allow => [
+            allow.owner('userSub'), // I can see my memberships
+            allow.authenticated()   // Admins need to see members (MVP loose)
+        ]),
+
+    Invite: a.model({
+        orgId: a.id().required(),
+        email: a.string().required(), // Target email
+        role: a.string().required(),
+        token: a.string().required(), // Secure random token
+        params: a.json(), // Extra context
+        expiresAt: a.string(),
+        invitedBySub: a.string(),
+        status: a.string().default('Pending') // Pending, Accepted, Expired
+    })
+        .authorization(allow => [
+            allow.authenticated() // Managed via custom logic mostly
+        ]),
+
+    // --- DOMAIN MODELS (Scoped by orgId) ---
+
     StrategicObjective: a.model({
-        name: a.string().required(),
-        ownerId: a.string().required(),
-        strategicValue: a.string().required(), // High, Medium, Low
-        targetDate: a.string().required(),
-        status: a.string().required(), // Active, Draft, etc.
-        currentHealth: a.string(),     // Green, Amber, Red
-        riskScore: a.integer(),
+        orgId: a.id().required(),
+        organization: a.belongsTo('Organization', 'orgId'),
 
-        tenantId: a.string(), // For multi-tenancy filtering
+        name: a.string().required(),
+        ownerId: a.string().required(), // Reference to UserProfile.userSub
+        strategicValue: a.string().required(),
+        targetDate: a.string().required(),
+        status: a.string().required(),
+        currentHealth: a.string(),
+        riskScore: a.integer(),
 
         outcomes: a.hasMany('Outcome', 'objectiveId'),
         heartbeats: a.hasMany('Heartbeat', 'objectiveId'),
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .secondaryIndexes(index => [index('orgId')])
+        .authorization(allow => [allow.authenticated()]),
 
     Outcome: a.model({
+        orgId: a.id().required(), // Denormalized for security scope
+
         objectiveId: a.id().required(),
         objective: a.belongsTo('StrategicObjective', 'objectiveId'),
 
@@ -56,14 +127,16 @@ const schema = a.schema({
         ownerId: a.string(),
         startDate: a.string(),
         targetDate: a.string(),
-
         heartbeatCadence: a.ref('CadenceSchedule'),
 
         keyResults: a.hasMany('KeyResult', 'outcomeId'),
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .secondaryIndexes(index => [index('orgId')])
+        .authorization(allow => [allow.authenticated()]),
 
     KeyResult: a.model({
+        orgId: a.id().required(),
+
         outcomeId: a.id().required(),
         outcome: a.belongsTo('Outcome', 'outcomeId'),
 
@@ -71,49 +144,50 @@ const schema = a.schema({
         ownerId: a.string(),
         startDate: a.string(),
         targetDate: a.string(),
-
         heartbeatCadence: a.ref('CadenceSchedule'),
 
         initiatives: a.hasMany('Initiative', 'keyResultId'),
         heartbeats: a.hasMany('Heartbeat', 'keyResultId'),
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .secondaryIndexes(index => [index('orgId')])
+        .authorization(allow => [allow.authenticated()]),
 
     Initiative: a.model({
+        orgId: a.id().required(),
+
         keyResultId: a.id().required(),
         keyResult: a.belongsTo('KeyResult', 'keyResultId'),
 
         name: a.string().required(),
         ownerId: a.string(),
         link: a.string(),
-        status: a.string(), // active, completed
-
+        status: a.string(),
         startDate: a.string(),
         targetEndDate: a.string(),
-
         heartbeatCadence: a.ref('CadenceSchedule'),
 
         heartbeats: a.hasMany('Heartbeat', 'initiativeId'),
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .secondaryIndexes(index => [index('orgId')])
+        .authorization(allow => [allow.authenticated()]),
 
     // Heartbeat Support Types
     LeadingIndicator: a.customType({
         name: a.string().required(),
         value: a.float().required(),
         previousValue: a.float(),
-        trend: a.string(), // improving, stable, degrading
+        trend: a.string(),
     }),
 
     Evidence: a.customType({
-        type: a.string().required(), // metric, artifact
+        type: a.string().required(),
         description: a.string(),
         sourceLink: a.string(),
     }),
 
     Risk: a.customType({
         description: a.string().required(),
-        severity: a.string().required(), // low, medium, high
+        severity: a.string().required(),
         mitigation: a.string(),
     }),
 
@@ -122,40 +196,33 @@ const schema = a.schema({
         attestedOn: a.string().required(),
     }),
 
-    // Heartbeats
     Heartbeat: a.model({
-        // Polymorphic-ish relationships (Optional FKs)
+        orgId: a.id().required(),
+
         objectiveId: a.id(),
         objective: a.belongsTo('StrategicObjective', 'objectiveId'),
-
         keyResultId: a.id(),
         keyResult: a.belongsTo('KeyResult', 'keyResultId'),
-
         initiativeId: a.id(),
         initiative: a.belongsTo('Initiative', 'initiativeId'),
 
-        // Core Data
         periodStart: a.string().required(),
         periodEnd: a.string().required(),
+        healthSignal: a.string().required(),
+        confidence: a.string(),
+        narrative: a.string().required(),
+        confidenceToExpectedImpact: a.integer(),
 
-        healthSignal: a.string().required(), // green, yellow, red
-        confidence: a.string(), // High, Medium, Low (Added for alignment)
-
-        narrative: a.string().required(), // Summary / Update text
-
-        confidenceToExpectedImpact: a.integer(), // Optional score
-
-        // Supporting Data
         leadingIndicators: a.ref('LeadingIndicator').array(),
         evidence: a.ref('Evidence').array(),
         risks: a.ref('Risk').array(),
-
         ownerAttestation: a.ref('OwnerAttestation'),
     })
-        .authorization(allow => [allow.owner(), allow.authenticated()]),
+        .secondaryIndexes(index => [index('orgId')])
+        .authorization(allow => [allow.authenticated()]),
 
-    sendHeartbeatNotification: a
-        .mutation()
+    // --- MUTATIONS ---
+    sendHeartbeatNotification: a.mutation()
         .arguments({
             recipientEmail: a.string().required(),
             link: a.string().required(),
@@ -165,6 +232,18 @@ const schema = a.schema({
         .returns(a.ref('NotificationResponse'))
         .authorization(allow => [allow.authenticated()])
         .handler(a.handler.function(sendNotification)),
+
+    manageOrg: a.mutation()
+        .arguments({
+            action: a.string().required(), // inviteUser, acceptInvite
+            orgId: a.string(),
+            email: a.string(),
+            role: a.string(),
+            token: a.string()
+        })
+        .returns(a.json())
+        .authorization(allow => [allow.authenticated()])
+        .handler(a.handler.function(manageOrg)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
