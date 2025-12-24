@@ -108,7 +108,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
             }
         };
 
-        store.addHeartbeat(keyResultId, 'kr', newHeartbeat);
+        store.addHeartbeat(keyResultId, 'keyResult', newHeartbeat);
         onClose();
     };
 
