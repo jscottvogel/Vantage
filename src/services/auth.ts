@@ -46,6 +46,8 @@ export const AuthService = {
      * @returns Promise<SignInOutput> logic from Amplify.
      */
     async signInWithPassword(username: string, password: string) {
+        // Debug logging for 400 errors
+        console.log(`Attempting login for: ${username}`);
         return await signIn({ username, password });
     },
 
