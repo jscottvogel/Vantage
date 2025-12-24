@@ -23,7 +23,7 @@ export function OrganizationSignUp() {
 
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (adminName.trim() && adminEmail.trim()) {
+        if (adminName.trim() && adminEmail.trim() && password) {
             try {
                 // Try initial signup
                 let result = await signupOrganization(orgName, adminEmail, adminName, password);
@@ -163,7 +163,7 @@ export function OrganizationSignUp() {
                             )}
 
                             <div className="flex flex-col gap-2">
-                                <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || isLoading}>
+                                <Button className="w-full" disabled={!adminName.trim() || !adminEmail.trim() || !password || isLoading}>
                                     {isLoading ? 'Creating Account...' : 'Complete Setup'}
                                 </Button>
                                 <Button

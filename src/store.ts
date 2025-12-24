@@ -236,6 +236,10 @@ export const useStore = create<AppState>((set, get) => ({
     login: async (email: string, password = 'password123') => {
         set({ isLoading: true, authError: null });
         const cleanEmail = email.trim();
+        if (!cleanEmail || !password) {
+            set({ isLoading: false, authError: "Email and password are required." });
+            return 'FAILED';
+        }
         try {
             await AuthService.signInWithPassword(cleanEmail, password);
             await get().checkSession();
