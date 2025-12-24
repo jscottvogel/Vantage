@@ -5,17 +5,9 @@ import type { Schema } from '../amplify/data/resource';
 // Import Domain Types STRICTLY
 import type {
     StrategicObjective,
-    Outcome,
-    KeyResult,
-    Initiative,
     Heartbeat,
     Organization as DomainOrganization, // Renamed to avoid collision if needed, but we used Organization in store. Will align.
-    User,
-    CadenceSchedule,
-    LeadingIndicator,
-    Evidence,
-    Risk,
-    OwnerAttestation
+    User
 } from './types';
 
 const client = generateClient<Schema>();
@@ -136,19 +128,8 @@ export const useStore = create<AppState>((set, get) => ({
                     role: m.role as any,
                     status: m.status as any,
                     organization: m.organization ? {
-                        id: m.organization.id,
-                        name: m.organization.name,
-                        // slug: m.organization.slug, // DomainOrganization from types.ts DOES NOT HAVE SLUG? Wait. 
-                        // types.ts Organization: { id, name, domain, subscriptionTier, ssoSettings, createdAt, updatedAt }
-                        // Schema Organization: { id, name, slug, subscriptionTier }
-                        // We must adapt. DomainOrganization doesn't have SLUG in types.ts?
-                        // If components need SLUG, we should update types.ts. BUT I cannot change types.ts easily if it breaks other things?
-                        // Actually, OrgSelector uses slug. 
-                        // I will cast it as any or extend DomainOrganization here locally if needed.
-                        // For now, let's map what we can.
-                        // Wait, OrgSelector.tsx uses .slug.
-                        // I should update types.ts to have slug, OR extend the type here.
-                        // I will cast as `any` or `DomainOrganization & { slug: string }`.
+                        // m.organization (Schema) includes id, name, slug.
+                        // We spread it first, then overwrite/add what we need for Domain compatibility.
                         ...m.organization,
                         slug: m.organization.slug,
                         subscriptionTier: (m.organization.subscriptionTier as any) || 'Free',
@@ -406,7 +387,7 @@ export const useStore = create<AppState>((set, get) => ({
     confirmNewPassword: async (email, code, newPassword) => { await AuthService.confirmResetPassword(email, code, newPassword); },
 
     // Data Mutations using Gen 2 Client
-    addKeyResult: async (objectiveId, outcomeId, keyResult) => {
+    addKeyResult: async (_objectiveId, outcomeId, keyResult) => {
         const org = get().currentOrg;
         if (!org) return;
         try {
@@ -423,7 +404,7 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e) { console.error("addKR failed", e); }
     },
 
-    updateKeyResult: async (objectiveId, outcomeId, krId, updates) => {
+    updateKeyResult: async (_objectiveId, _outcomeId, krId, updates) => {
         try {
             const { initiatives, heartbeats, ...validUpdates } = updates;
             await client.models.KeyResult.update({ id: krId, ...validUpdates });
@@ -431,14 +412,14 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e) { console.error("updateKR failed", e); }
     },
 
-    removeKeyResult: async (objectiveId, outcomeId, krId) => {
+    removeKeyResult: async (_objectiveId, _outcomeId, krId) => {
         try {
             await client.models.KeyResult.delete({ id: krId });
             await get().fetchObjectives();
         } catch (e) { console.error("delKR failed", e); }
     },
 
-    addInitiative: async (objectiveId, krId, initiative) => {
+    addInitiative: async (_objectiveId, krId, initiative) => {
         const org = get().currentOrg;
         if (!org) return;
         try {
@@ -457,14 +438,14 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e) { console.error("addInit failed", e); }
     },
 
-    removeInitiative: async (objectiveId, krId, initiativeId) => {
+    removeInitiative: async (_objectiveId, _krId, initiativeId) => {
         try {
             await client.models.Initiative.delete({ id: initiativeId });
             await get().fetchObjectives();
         } catch (e) { console.error("delInit failed", e); }
     },
 
-    updateInitiative: async (objectiveId, krId, initiativeId, updates) => {
+    updateInitiative: async (_objectiveId, _krId, initiativeId, updates) => {
         try {
             const { heartbeats, ...validUpdates } = updates;
             await client.models.Initiative.update({ id: initiativeId, ...validUpdates });
