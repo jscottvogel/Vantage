@@ -39,11 +39,12 @@ const schema = a.schema({
         email: a.string().required(),
         displayName: a.string(),
         createdAt: a.string(),
+        owner: a.string(), // Added for owner auth
         // Relations
         memberships: a.hasMany('Membership', 'userSub')
     })
         .authorization(allow => [
-            allow.owner('userSub'), // Users own their profile
+            allow.owner(), // checks 'owner' field
             allow.authenticated() // Viewable by others (for team UI)
         ]),
 
@@ -72,13 +73,14 @@ const schema = a.schema({
 
         role: a.string().required(), // Owner, Admin, Member, BillingAdmin
         status: a.string().default('Active'), // Active, Suspended
+        owner: a.string(), // Added for owner auth
     })
         .secondaryIndexes((index) => [
             index('userSub'), // efficiently find my orgs
             index('orgId')    // efficiently find org members
         ])
         .authorization(allow => [
-            allow.owner('userSub'), // I can see my memberships
+            allow.owner(), // I can see my memberships
             allow.authenticated()   // Admins need to see members (MVP loose)
         ]),
 

@@ -105,12 +105,21 @@ export interface CadenceSchedule { frequency: string; dueDay: string; dueTime: s
 export interface LeadingIndicator {
     name: string;
     value: number;
-    previousValue?: number;
-    trend?: string;
+    previousValue?: number | null;
+    trend?: string | null;
 }
-export interface Evidence { type: string; description?: string; sourceLink?: string; }
-export interface Risk { description: string; severity: string; mitigation?: string; }
+export interface Evidence { type: string; description?: string | null; sourceLink?: string | null; }
+export interface Risk { description: string; severity: string; mitigation?: string | null; }
 export interface OwnerAttestation { attestedBy: string; attestedOn: string; }
+
+interface LegacyUser {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId: string;
+    status: string;
+}
 
 interface AppState {
     // Session State
@@ -120,11 +129,16 @@ interface AppState {
 
     // Data State (Scoped to currentOrg)
     objectives: StrategicObjective[];
-    users: any[]; // Team Members (Partial User type)
+    users: any[];
 
     // UI State
     isLoading: boolean;
     authError: string | null;
+    planName: string; // Compat
+
+    // Computed Properties (accessed via Getters in components or synced)
+    currentUser: LegacyUser | null;
+    currentOrganization: Organization | null;
 
     // Actions
     checkSession: () => Promise<void>;
@@ -142,10 +156,18 @@ interface AppState {
     createObjective: (name: string, ownerId: string, strategicValue: string, targetDate: string, outcomes: any[]) => Promise<void>;
     inviteUser: (email: string, role: string) => Promise<void>;
 
-    // Placeholders for compilation
-    updateUserRole: (userId: string, role: any) => Promise<void>;
-    removeUser: (userId: string) => Promise<void>;
-    addHeartbeat: (targetId: string, targetType: any, heartbeat: any) => Promise<void>;
+    // Missing Methods Restoration
+    updateOrganization: (updates: Partial<Organization>) => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
+    confirmNewPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+
+    addKeyResult: (objectiveId: string, outcomeId: string, keyResult: any) => Promise<void>;
+    updateKeyResult: (objectiveId: string, outcomeId: string, krId: string, updates: any) => Promise<void>;
+    removeKeyResult: (objectiveId: string, outcomeId: string, krId: string) => Promise<void>;
+
+    addInitiative: (objectiveId: string, krId: string, initiative: any) => Promise<void>;
+    removeInitiative: (objectiveId: string, krId: string, initiativeId: string) => Promise<void>;
+    updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: any) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -156,14 +178,16 @@ export const useStore = create<AppState>((set, get) => ({
     users: [],
     isLoading: true,
     authError: null,
+    planName: 'Free',
+    currentUser: null,
+    currentOrganization: null,
 
     checkSession: async () => {
         set({ isLoading: true });
         try {
             const user = await AuthService.getCurrentUser();
-            // user.id comes from AuthService returning User type
             if (!user || !user.id) {
-                set({ userProfile: null, memberships: [], currentOrg: null, isLoading: false });
+                set({ userProfile: null, memberships: [], currentOrg: null, currentUser: null, currentOrganization: null, isLoading: false });
                 return;
             }
 
@@ -209,6 +233,16 @@ export const useStore = create<AppState>((set, get) => ({
                     if (first && first.organization) activeOrg = first.organization;
                 }
 
+                // Construct Legacy User
+                const legacyUser: LegacyUser | null = userProfile ? {
+                    id: userProfile.userSub,
+                    email: userProfile.email,
+                    name: userProfile.displayName,
+                    role: 'Member', // Default, needs context of Org
+                    tenantId: activeOrg?.id || '',
+                    status: 'Active'
+                } : null;
+
                 set({
                     userProfile: userProfile ? {
                         userSub: userProfile.userSub,
@@ -217,7 +251,9 @@ export const useStore = create<AppState>((set, get) => ({
                         owner: userProfile.owner || ''
                     } : null,
                     memberships,
-                    currentOrg: activeOrg
+                    currentOrg: activeOrg,
+                    currentUser: legacyUser,
+                    currentOrganization: activeOrg
                 });
 
                 if (activeOrg) {
@@ -250,7 +286,7 @@ export const useStore = create<AppState>((set, get) => ({
 
     logout: async () => {
         await AuthService.signOut();
-        set({ userProfile: null, memberships: [], currentOrg: null, objectives: [], users: [] });
+        set({ userProfile: null, memberships: [], currentOrg: null, objectives: [], users: [], currentUser: null, currentOrganization: null });
         localStorage.removeItem('vantage_active_org');
     },
 
@@ -281,7 +317,7 @@ export const useStore = create<AppState>((set, get) => ({
         const memberships = get().memberships;
         const match = memberships.find(m => m.orgId === orgId);
         if (match && match.organization) {
-            set({ currentOrg: match.organization, isLoading: true });
+            set({ currentOrg: match.organization, currentOrganization: match.organization, isLoading: true });
             localStorage.setItem('vantage_active_org', orgId);
             await get().fetchObjectives();
             await get().fetchTeam();
@@ -295,7 +331,6 @@ export const useStore = create<AppState>((set, get) => ({
 
         try {
             // Update filtering to use 'orgId' (Standardized)
-            // Using cast to avoid strict type mismatch on complex nested objects during draft phase
             const { data: objs } = await client.models.StrategicObjective.list({
                 filter: { orgId: { eq: org.id } },
                 selectionSet: [
@@ -389,13 +424,86 @@ export const useStore = create<AppState>((set, get) => ({
         }
     },
 
-    updateUserRole: async (_userId, _role) => {
-        // Placeholder or implement via manageOrg or direct Membership update
+    // --- Restored Methods ---
+
+    updateOrganization: async (updates) => {
+        const org = get().currentOrg;
+        if (!org) return;
+        try {
+            await client.models.Organization.update({ id: org.id, ...updates });
+            set({ currentOrg: { ...org, ...updates }, currentOrganization: { ...org, ...updates } });
+        } catch (e) { console.error(e); }
     },
-    removeUser: async (_userId) => {
-        // Placeholder
+
+    resetPassword: async (email) => { await AuthService.resetPassword(email); },
+    confirmNewPassword: async (email, code, newPassword) => { await AuthService.confirmResetPassword(email, code, newPassword); },
+
+    // Data Mutations using Gen 2 Client
+
+    addKeyResult: async (objectiveId, outcomeId, keyResult) => {
+        const org = get().currentOrg;
+        if (!org) return;
+        try {
+            await client.models.KeyResult.create({
+                orgId: org.id,
+                outcomeId,
+                description: keyResult.description,
+                ownerId: keyResult.ownerId,
+                startDate: keyResult.startDate,
+                targetDate: keyResult.targetDate,
+                heartbeatCadence: keyResult.heartbeatCadence
+            });
+            await get().fetchObjectives();
+        } catch (e) { console.error("addKR failed", e); }
     },
-    addHeartbeat: async (_targetId, _targetType, _heartbeat) => {
-        // Placeholder
-    }
+
+    updateKeyResult: async (objectiveId, outcomeId, krId, updates) => {
+        try {
+            // Filter out relations if passed in updates
+            const { initiatives, heartbeats, ...validUpdates } = updates;
+            await client.models.KeyResult.update({ id: krId, ...validUpdates });
+            await get().fetchObjectives();
+        } catch (e) { console.error("updateKR failed", e); }
+    },
+
+    removeKeyResult: async (objectiveId, outcomeId, krId) => {
+        try {
+            await client.models.KeyResult.delete({ id: krId });
+            await get().fetchObjectives();
+        } catch (e) { console.error("delKR failed", e); }
+    },
+
+    addInitiative: async (objectiveId, krId, initiative) => {
+        const org = get().currentOrg;
+        if (!org) return;
+        try {
+            await client.models.Initiative.create({
+                orgId: org.id,
+                keyResultId: krId,
+                name: initiative.name,
+                ownerId: initiative.ownerId,
+                link: initiative.link,
+                status: initiative.status,
+                startDate: initiative.startDate,
+                targetEndDate: initiative.targetEndDate,
+                heartbeatCadence: initiative.heartbeatCadence
+            });
+            await get().fetchObjectives();
+        } catch (e) { console.error("addInit failed", e); }
+    },
+
+    removeInitiative: async (objectiveId, krId, initiativeId) => {
+        try {
+            await client.models.Initiative.delete({ id: initiativeId });
+            await get().fetchObjectives();
+        } catch (e) { console.error("delInit failed", e); }
+    },
+
+    updateInitiative: async (objectiveId, krId, initiativeId, updates) => {
+        try {
+            const { heartbeats, ...validUpdates } = updates;
+            await client.models.Initiative.update({ id: initiativeId, ...validUpdates });
+            await get().fetchObjectives();
+        } catch (e) { console.error("updateInit failed", e); }
+    },
 }));
