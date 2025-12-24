@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
 import { X } from 'lucide-react';
 
 interface TeamDialogProps {
@@ -50,7 +51,10 @@ export function TeamDialog({ onClose }: TeamDialogProps) {
                             {users.map(user => (
                                 <div key={user.id} className="flex items-center justify-between p-2 border rounded-md bg-muted/20">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-medium">{user.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium">{user.name}</span>
+                                            {user.status === 'Invited' && <Badge variant="outline" className="text-[10px] h-4 px-1">Pending</Badge>}
+                                        </div>
                                         <span className="text-xs text-muted-foreground">{user.email}</span>
                                     </div>
                                     <span className="text-xs bg-secondary px-2 py-1 rounded-full text-secondary-foreground">

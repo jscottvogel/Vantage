@@ -1,18 +1,16 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Authenticator } from '@aws-amplify/ui-react';
 import { useStore } from "./store";
 import { Dashboard } from "./components/Dashboard";
-import { LoginPage } from "./components/LoginPage";
-import { OrganizationSignUp } from "./components/SignUp/OrganizationSignUp";
 import { HeartbeatEntryPage } from "./components/HeartbeatEntryPage";
 import { AdminLayout } from "./components/Admin/AdminLayout";
 import { OrganizationSettings } from "./components/Admin/OrganizationSettings";
 import { UserManagement } from "./components/Admin/UserManagement";
 import { Loader2 } from 'lucide-react';
 
-function App() {
-  const { currentUser, isLoading, checkSession } = useStore();
-  const location = useLocation();
+function ProtectedApp() {
+  const { isLoading, checkSession } = useStore();
 
   useEffect(() => {
     checkSession();
@@ -24,14 +22,6 @@ function App() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!currentUser) {
-    if (location.pathname.replace(/\/$/, '') === '/signup') {
-      return <OrganizationSignUp />;
-    }
-    // Redirect to login if not signed up or logged in, but allow signup page
-    return <LoginPage />;
   }
 
   return (
@@ -49,6 +39,14 @@ function App() {
       } />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+}
+
+function App() {
+  return (
+    <Authenticator>
+      {() => <ProtectedApp />}
+    </Authenticator>
   );
 }
 

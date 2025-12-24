@@ -137,6 +137,7 @@ export const useStore = create<AppState>((set, get) => ({
 
                     // Self-healing: If current user is not in the DB
                     const currentUserInDb = team.find(u => u.email === authUser.email);
+
                     if (!currentUserInDb) {
                         try {
                             const { data: newUser } = await client.models.User.create({
@@ -160,6 +161,24 @@ export const useStore = create<AppState>((set, get) => ({
                             }
                         } catch (err) {
                             console.error("Failed to auto-create user record:", err);
+                        }
+                    } else if (currentUserInDb.status === 'Invited') {
+                        // User was invited and is now logging in for the first time.
+                        // Update status to Active.
+                        try {
+                            await client.models.User.update({
+                                id: currentUserInDb.id,
+                                status: 'Active',
+                                name: authUser.name || currentUserInDb.name // Update name if provided by Cognito
+                            });
+
+                            // Update local list
+                            const userIndex = team.findIndex(u => u.id === currentUserInDb.id);
+                            if (userIndex !== -1) {
+                                team[userIndex] = { ...team[userIndex], status: 'Active', name: authUser.name || team[userIndex].name };
+                            }
+                        } catch (err) {
+                            console.error("Failed to accept invitation for user:", err);
                         }
                     }
 
