@@ -221,7 +221,9 @@ export const useStore = create<AppState>((set, get) => ({
 
             if (orgErrors || !newOrg) {
                 console.error("Org Creation Failed", orgErrors);
-                throw new Error("Failed to create organization.");
+                // Expose the actual error to the UI
+                const msg = orgErrors ? JSON.stringify(orgErrors) : "No data returned";
+                throw new Error(`Failed to create Org: ${msg}`);
             }
 
             // 2. Create Membership
