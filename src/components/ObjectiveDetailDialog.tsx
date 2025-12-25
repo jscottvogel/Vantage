@@ -33,14 +33,14 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
     // KR CRUD State
     const [addingKRToOutcome, setAddingKRToOutcome] = useState<string | null>(null);
     const [newKRDescription, setNewKRDescription] = useState('');
-    const [newKROwnerId, setNewKROwnerId] = useState(store.currentUser?.id || store.users[0]?.id || '');
+    const [newKROwnerId, setNewKROwnerId] = useState(store.userProfile?.userSub || store.users[0]?.id || '');
 
     const [editingKR, setEditingKR] = useState<string | null>(null);
     const [editKRDescription, setEditKRDescription] = useState('');
     const [editKROwnerId, setEditKROwnerId] = useState('');
 
     const [newInitName, setNewInitName] = useState('');
-    const [newInitOwnerId, setNewInitOwnerId] = useState(store.currentUser?.id || store.users[0]?.id || '');
+    const [newInitOwnerId, setNewInitOwnerId] = useState(store.userProfile?.userSub || store.users[0]?.id || '');
 
     if (!objective) return null;
 
@@ -61,7 +61,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
         store.addKeyResult(objectiveId, outcomeId, newKR);
         setAddingKRToOutcome(null);
         setNewKRDescription('');
-        setNewKROwnerId(store.currentUser?.id || activeUsers[0]?.id || '');
+        setNewKROwnerId(store.userProfile?.userSub || activeUsers[0]?.id || '');
     };
 
     const startEditingKR = (kr: KeyResult) => {
@@ -144,7 +144,7 @@ export function ObjectiveDetailDialog({ objectiveId, onClose, onSelectInitiative
 
     const getOwnerName = (id: string) => {
         // Fallback: If ID matches current user's Auth ID (legacy data), return their name
-        if (store.currentUser && id === store.currentUser.id) return store.currentUser.name;
+        if (store.userProfile && id === store.userProfile.userSub) return store.userProfile.displayName;
 
         const user = store.users.find(u => u.id === id);
         return user ? user.name : id;

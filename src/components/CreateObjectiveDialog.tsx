@@ -59,7 +59,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
         }
     ]);
 
-    const currentUser = useStore(state => state.currentUser);
+    const userProfile = useStore(state => state.userProfile);
     const createObjective = useStore(state => state.createObjective);
     const objectives = useStore(state => state.objectives);
     const maxActive = useStore(state => state.maxActiveObjectives);
@@ -179,8 +179,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!currentUser) {
-            console.error("Cannot create: User session not loaded (currentUser is null).");
+        if (!userProfile) {
+            console.error("Cannot create: User session not loaded (userProfile is null).");
             alert("Your session appears incomplete. Please refresh the page.");
             return;
         }
@@ -191,8 +191,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                 // Basic validation: Ensure at least one outcome with a goal
                 const validOutcomes = outcomes.filter(o => o.goal.trim().length > 0);
                 // Use DB User ID if available, otherwise fallback to Auth ID
-                const dbUser = users.find(u => u.email === currentUser.email);
-                const ownerIdToUse = dbUser ? dbUser.id : currentUser.id;
+                const dbUser = users.find(u => u.email === userProfile.email);
+                const ownerIdToUse = dbUser ? dbUser.id : userProfile.userSub;
 
                 await createObjective(name, ownerIdToUse, strategicValue, targetDate, validOutcomes);
                 onClose();

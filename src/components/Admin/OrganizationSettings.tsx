@@ -6,9 +6,11 @@ import { Badge } from '../ui/badge';
 import { Check } from 'lucide-react';
 
 export function OrganizationSettings() {
-    const { currentOrganization: org, updateOrganization, planName } = useStore();
+    const { currentOrg: org, updateOrganization } = useStore();
     const [name, setName] = useState(org?.name || '');
     const [isSaved, setIsSaved] = useState(false);
+
+    const planName = org?.subscriptionTier || 'Free';
 
     // Sync local state when store is populated
     useEffect(() => {

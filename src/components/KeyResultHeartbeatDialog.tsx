@@ -103,7 +103,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
             evidence: [],
 
             ownerAttestation: {
-                attestedBy: store.currentUser?.name || "User",
+                attestedBy: store.userProfile?.displayName || "User",
                 attestedOn: new Date().toISOString()
             }
         };

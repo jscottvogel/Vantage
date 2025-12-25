@@ -103,7 +103,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
             confidenceToExpectedImpact: confidence,
             narrative: "Manual entry", // Default for now until form has a field
             ownerAttestation: {
-                attestedBy: store.currentUser?.name || 'Unknown',
+                attestedBy: store.userProfile?.displayName || 'Unknown',
                 attestedOn: new Date().toISOString().split('T')[0]
             }
         };
@@ -127,7 +127,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
 
     const getOwnerName = (id: string) => {
         // Fallback: If ID matches current user's Auth ID (legacy data), return their name
-        if (store.currentUser && id === store.currentUser.id) return store.currentUser.name;
+        if (store.userProfile && id === store.userProfile.userSub) return store.userProfile.displayName;
 
         const user = store.users.find(u => u.id === id);
         return user ? user.name : id;
