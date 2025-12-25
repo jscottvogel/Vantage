@@ -14,14 +14,26 @@ export function Dashboard() {
     const objectives = useStore(state => state.objectives);
     const logout = useStore(state => state.logout);
     const user = useStore(state => state.userProfile);
-    const { currentOrg, memberships, isLoading, bootstrapOrganization } = useStore();
+    const { currentOrg, memberships, isLoading, bootstrapOrganization, authError } = useStore();
 
     // Auto-bootstrap if new user
     useEffect(() => {
-        if (!isLoading && !currentOrg && memberships.length === 0) {
+        if (!isLoading && !currentOrg && memberships.length === 0 && !authError) {
             bootstrapOrganization();
         }
-    }, [isLoading, currentOrg, memberships, bootstrapOrganization]);
+    }, [isLoading, currentOrg, memberships, bootstrapOrganization, authError]);
+
+    if (authError) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6 text-center">
+                <div className="max-w-md space-y-4 rounded-lg border border-destructive/50 bg-destructive/10 p-6">
+                    <h3 className="text-lg font-semibold text-destructive">Setup Error</h3>
+                    <p className="text-sm text-foreground">{authError}</p>
+                    <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+            </div>
+        );
+    }
 
     // Modal State
     const [isCreateOpen, setCreateOpen] = useState(false);

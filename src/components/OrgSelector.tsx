@@ -5,13 +5,14 @@ import { ChevronsUpDown, Check } from 'lucide-react';
 import { Button } from './ui/button';
 
 export function OrgSelector() {
-    const { memberships, currentOrg } = useStore();
+    const { memberships, currentOrg, switchOrganization } = useStore();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const handleSelect = (orgSlug: string) => {
-        navigate(`/org/${orgSlug}/dashboard`);
+    const handleSelect = (orgId: string) => {
+        switchOrganization(orgId);
+        navigate(`/dashboard`);
         setIsOpen(false);
     };
 
@@ -45,7 +46,7 @@ export function OrgSelector() {
                     {memberships.map((m) => (
                         <div
                             key={m.orgId}
-                            onClick={() => m.organization && handleSelect(m.organization.slug)}
+                            onClick={() => handleSelect(m.orgId)}
                             className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                         >
                             <span className="flex-1">{m.organization?.name}</span>
