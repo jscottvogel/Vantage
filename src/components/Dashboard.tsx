@@ -100,10 +100,15 @@ export function Dashboard() {
                             <p className="text-muted-foreground">
                                 You don't have any objectives tracked yet. Define your first strategic objective to start establishing delivery truth.
                             </p>
-                            <Button size="lg" onClick={() => setCreateOpen(true)}>
-                                <Plus className="w-5 h-5 mr-2" />
-                                Create First Objective
-                            </Button>
+                            <div className="flex flex-col gap-3">
+                                <Button size="lg" onClick={() => setCreateOpen(true)}>
+                                    <Plus className="w-5 h-5 mr-2" />
+                                    Create First Objective
+                                </Button>
+                                <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => useStore.getState().resetData()}>
+                                    Start Over (Reset All Data)
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 ) : (
