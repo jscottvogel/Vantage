@@ -26,7 +26,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    role: 'Admin' | 'Member';
+    role: 'Admin' | 'Member' | 'Owner' | 'BillingAdmin';
     tenantId: string;
     status: 'Active' | 'Invited' | 'Disabled';
 }

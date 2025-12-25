@@ -12,7 +12,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const currentUser = useStore(state => state.currentUser);
     const currentOrg = useStore(state => state.currentOrganization);
 
-    if (!currentUser || currentUser.role !== 'Admin') {
+    if (!currentUser || (currentUser.role !== 'Admin' && currentUser.role !== 'Owner')) {
         return <Navigate to="/" replace />;
     }
 
