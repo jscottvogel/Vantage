@@ -37,8 +37,8 @@ export function Dashboard() {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b">
                 <div className="space-y-1 flex flex-col md:flex-row md:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Strategic Dashboard</h1>
-                        <p className="text-muted-foreground text-sm">Overview for {user?.displayName} • {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{useStore.getState().currentOrg?.name || 'My Org'} Dashboard</h1>
+                        <p className="text-muted-foreground text-sm">Strategic Overview • {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                     <OrgSelector />
                 </div>

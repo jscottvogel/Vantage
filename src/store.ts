@@ -102,209 +102,133 @@ export const useStore = create<AppState>((set, get) => ({
 
     checkSession: async () => {
         set({ isLoading: true });
-        console.warn("--- Running Session Check ---");
+        console.log("--- Session Check Start ---");
+
         try {
-            // 1. Authenticate with Cognito
+            // 1. Authenticate
             const user = await AuthService.getCurrentUser();
-            if (!user || !user.id) {
-                console.log("No authenticated user.");
-                set({ userProfile: null, memberships: [], currentOrg: null, currentUser: null, currentOrganization: null, isLoading: false });
+            if (!user) {
+                console.log("No auth user. Resetting state.");
+                set({ userProfile: null, memberships: [], currentOrg: null, isLoading: false });
                 return;
             }
 
-            // 2. Resolve User Profile
-            let userProfile: UserProfile | null = null;
-            const profileId = user.id;
-
+            // 2. Get or Create User Profile
+            // We use user.id (Cognito Sub) as the primary key strictly.
+            let profile = null;
             try {
-                // Check existence
-                const { data: existing } = await client.models.UserProfile.get({ userSub: profileId });
-
+                const { data: existing } = await client.models.UserProfile.get({ userSub: user.id });
                 if (existing) {
-                    userProfile = {
-                        userSub: existing.userSub,
-                        email: existing.email,
-                        displayName: existing.displayName || '',
-                        owner: existing.owner || ''
-                    };
+                    profile = existing;
                 } else {
-                    console.log("Profile not found. Creating...", profileId);
+                    console.log("Creating new UserProfile...");
                     const { data: newProfile } = await client.models.UserProfile.create({
-                        userSub: profileId,
+                        userSub: user.id,
                         email: user.email,
                         displayName: user.name || user.email.split('@')[0],
-                        owner: profileId
+                        owner: user.id
                     });
-
-                    if (newProfile) {
-                        userProfile = {
-                            userSub: newProfile.userSub,
-                            email: newProfile.email,
-                            displayName: newProfile.displayName || '',
-                            owner: newProfile.owner || ''
-                        };
-                    }
+                    profile = newProfile;
                 }
-            } catch (pErr) {
-                console.error("Profile check/create error:", pErr);
+            } catch (err) {
+                console.error("Profile Error:", err);
             }
 
-            // Fallback so UI doesn't crash if DB is flaky but Auth is fine
-            if (!userProfile) {
-                userProfile = { userSub: user.id, email: user.email, displayName: user.name || '', owner: user.id };
-            }
+            // 3. Fetch Memberships
+            // This determines if we need to bootstrap an Org.
+            let loadedMemberships: any[] = [];
 
-            // 3. Resolve Memberships
-            let memberships: Membership[] = [];
-            try {
-                console.log("Resolving memberships for user:", profileId);
-                const { data: rawMembers } = await client.models.Membership.list({
-                    filter: { userSub: { eq: profileId } },
-                    selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
+            const { data: allMemberships } = await client.models.Membership.list({
+                filter: { userSub: { eq: user.id } },
+                selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
+            });
+
+            // Filter for valid connected organizations
+            loadedMemberships = allMemberships.filter(m => m.organization && m.organization.id);
+
+            // 4. Bootstrap "My Org" if New User
+            if (loadedMemberships.length === 0) {
+                console.log("No Memberships. Creating Default 'My Org'...");
+
+                // A. Create Org
+                const storedName = localStorage.getItem('vantage_signup_org_name');
+                const orgName = storedName || "My Org";
+                if (storedName) localStorage.removeItem('vantage_signup_org_name');
+
+                const slug = `my-org-${Date.now().toString().slice(-6)}`;
+                const { data: newOrg } = await client.models.Organization.create({
+                    name: orgName,
+                    slug: slug,
+                    subscriptionTier: "Free",
+                    status: "Active",
+                    createdBySub: user.id
                 });
 
-                // Filter out zombies (where organization is null)
-                const validMembers = rawMembers.filter(m => m.organization && m.organization.id);
-                console.log(`Memberships found: ${rawMembers.length} (Valid: ${validMembers.length})`);
-
-                if (rawMembers.length > validMembers.length) {
-                    const zombies = rawMembers.filter(m => !m.organization || !m.organization.id);
-                    Promise.all(zombies.map(z => client.models.Membership.delete({ id: z.id })));
-                }
-
-                if (validMembers.length === 0) {
-                    // --- BOOTSTRAP DEFAULT ORG ---
-                    console.log("No valid memberships. Bootstrapping...");
-
-                    // Retrieve stored name or default
-                    const storedName = localStorage.getItem('vantage_signup_org_name');
-                    // Requirement: Default to "My Org" if not specified
-                    const orgName = storedName || "My Org";
-                    // Clear it so we don't reuse it weirdly later
-                    if (storedName) localStorage.removeItem('vantage_signup_org_name');
-
-                    const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-') + `-${Date.now().toString().slice(-4)}`;
-
-                    console.log("Creating Org:", { orgName, slug });
-                    const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
-                        name: orgName,
-                        slug: slug,
-                        subscriptionTier: "Free",
-                        status: "Active",
-                        createdBySub: profileId
+                if (newOrg) {
+                    console.log("Org Created:", newOrg.id);
+                    // B. Create Owner Membership
+                    const { data: newMember } = await client.models.Membership.create({
+                        orgId: newOrg.id,
+                        userSub: user.id,
+                        role: "Owner",
+                        status: "Active"
                     });
 
-                    if (orgErrors) {
-                        console.error("Org Create Failed:", orgErrors);
-                        throw new Error("Failed to create organization");
-                    }
-
-                    if (newOrg) {
-                        console.log("Org Created. Creating Membership...");
-                        const { data: newMember, errors: memberErrors } = await client.models.Membership.create({
-                            orgId: newOrg.id,
-                            userSub: profileId,
-                            role: "Owner",
-                            status: "Active"
+                    if (newMember) {
+                        console.log("Membership Created. Bootstrapping Complete.");
+                        // Push to local array so UI updates immediately
+                        loadedMemberships.push({
+                            ...newMember,
+                            organization: newOrg
                         });
-
-                        if (memberErrors) console.error("Membership Create Failed:", memberErrors);
-
-                        if (newMember) {
-                            memberships = [{
-                                id: newMember.id,
-                                orgId: newMember.orgId,
-                                userSub: newMember.userSub,
-                                role: newMember.role as any,
-                                status: newMember.status as any,
-                                organization: {
-                                    ...newOrg,
-                                    slug: newOrg.slug,
-                                    subscriptionTier: 'Free',
-                                    createdAt: new Date().toISOString(),
-                                    updatedAt: new Date().toISOString()
-                                } as any
-                            }];
-                            console.log("Bootstrap success.");
-                        }
                     }
-                } else {
-                    // --- MAP EXISTING ---
-                    memberships = validMembers.map(m => ({
-                        id: m.id,
-                        orgId: m.orgId,
-                        userSub: m.userSub,
-                        role: m.role as any,
-                        status: m.status as any,
-                        organization: {
-                            ...m.organization,
-                            slug: m.organization!.slug,
-                            subscriptionTier: (m.organization!.subscriptionTier as any) || 'Free',
-                            createdAt: m.organization!.createdAt || new Date().toISOString(),
-                            updatedAt: m.organization!.updatedAt || new Date().toISOString()
-                        } as any
-                    }));
                 }
-            } catch (mErr) {
-                console.error("Membership resolution error", mErr);
             }
 
-            // 4. Resolve Active Organization
-            let activeOrg: any = null;
-            const savedOrgId = localStorage.getItem('vantage_active_org');
+            // 5. Determine Active Context
+            let activeOrg = null;
+            if (loadedMemberships.length > 0) {
+                // Prefer last active, otherwise first
+                const savedId = localStorage.getItem('vantage_active_org');
+                const match = loadedMemberships.find(m => m.orgId === savedId);
+                activeOrg = match ? match.organization : loadedMemberships[0].organization;
 
-            if (savedOrgId) {
-                const match = memberships.find(m => m.orgId === savedOrgId);
-                if (match) activeOrg = match.organization;
-            }
-
-            // Fallback: If no active org selected, pick the first one
-            if (!activeOrg && memberships.length > 0) {
-                activeOrg = memberships[0].organization;
-                // Auto-persist selection
+                // Persist choice
                 if (activeOrg) localStorage.setItem('vantage_active_org', activeOrg.id);
             }
 
-            // 5. Construct Legacy User Object
-            const legacyUser: User = {
-                id: userProfile?.userSub || user.id,
-                email: userProfile?.email || user.email,
-                name: userProfile?.displayName || user.name || '',
-                role: 'Owner', // Force Owner for now to bypass Admin Guard if role missing
-                tenantId: activeOrg?.id || '',
-                status: 'Active'
-            };
-
-            // Refine role if real membership found
-            if (activeOrg) {
-                const m = memberships.find(mem => mem.orgId === activeOrg.id);
-                if (m) legacyUser.role = m.role;
-            }
-
-            // 6. UPDATE STATE
+            // 6. Update State
             console.log("Updating Store State:", { org: activeOrg?.name, members: memberships.length });
 
             set({
-                userProfile: userProfile ? userProfile : {
-                    userSub: user.id,
-                    email: user.email,
-                    displayName: user.name || '',
-                    owner: user.id
-                },
-                memberships,
+                userProfile: profile ? {
+                    userSub: profile.userSub,
+                    email: profile.email,
+                    displayName: profile.displayName || '',
+                    owner: profile.owner || ''
+                } : null,
+                memberships: loadedMemberships.map(m => ({
+                    id: m.id,
+                    orgId: m.orgId,
+                    userSub: m.userSub,
+                    role: m.role as any,
+                    status: m.status as any,
+                    organization: m.organization
+                })),
                 currentOrg: activeOrg,
-                currentUser: legacyUser,
+                // Legacy / Compat
+                currentUser: { id: user.id, email: user.email, name: user.name || '', role: 'Owner', tenantId: activeOrg?.id, status: 'Active' },
                 currentOrganization: activeOrg
             });
 
-            // 7. Data Fetch Trigger
+            // 7. Load Data
             if (activeOrg) {
                 get().fetchObjectives();
                 get().fetchTeam();
             }
 
-        } catch (error) {
-            console.error("Session check fatal error", error);
+        } catch (fatal) {
+            console.error("Critical Session Error:", fatal);
         } finally {
             set({ isLoading: false });
         }
