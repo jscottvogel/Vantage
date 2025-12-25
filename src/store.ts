@@ -124,7 +124,7 @@ export const useStore = create<AppState>((set, get) => ({
                             displayName: user.name,
                             owner: user.id
                         });
-                        userProfile = newProfile;
+                        if (newProfile) userProfile = newProfile;
                     } catch (e) {
                         console.error("Failed to create UserProfile", e);
                     }
