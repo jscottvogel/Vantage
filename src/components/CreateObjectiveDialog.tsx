@@ -287,7 +287,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                         )}
 
                                         {/* Outcome Fields */}
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="space-y-4 mb-4">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal (The 'What')</label>
                                                 <textarea

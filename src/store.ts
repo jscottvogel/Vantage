@@ -121,6 +121,34 @@ export const useStore = create<AppState>((set, get) => ({
                     selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
                 });
 
+                if (memberList.length === 0) {
+                    console.log("No memberships found. Auto-creating 'My Org'...");
+                    try {
+                        const slug = `my-org-${user.id.substring(0, 8)}`;
+                        const { data: newOrg } = await client.models.Organization.create({
+                            name: "My Org",
+                            slug,
+                            subscriptionTier: "Free",
+                            status: "Active",
+                            createdBySub: user.id
+                        });
+
+                        if (newOrg) {
+                            await client.models.Membership.create({
+                                orgId: newOrg.id,
+                                userSub: user.id,
+                                role: "Owner",
+                                status: "Active"
+                            });
+                            console.log("Default org created. Reloading session...");
+                            await get().checkSession();
+                            return;
+                        }
+                    } catch (createErr) {
+                        console.error("Failed to auto-create organization", createErr);
+                    }
+                }
+
                 const memberships: Membership[] = memberList.map(m => ({
                     id: m.id,
                     orgId: m.orgId,
