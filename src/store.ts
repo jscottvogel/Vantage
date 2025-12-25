@@ -320,10 +320,16 @@ export const useStore = create<AppState>((set, get) => ({
 
     createObjective: async (name, ownerId, strategicValue, targetDate, outcomes) => {
         const org = get().currentOrg;
-        if (!org) return;
+        console.log("createObjective called", { name, orgId: org?.id, outcomesCount: outcomes.length });
+
+        if (!org) {
+            console.error("No active organization found in store. Cannot create objective.");
+            return;
+        }
 
         try {
-            const { data: newObj } = await client.models.StrategicObjective.create({
+            console.log("Creating StrategicObjective in DB...");
+            const { data: newObj, errors } = await client.models.StrategicObjective.create({
                 orgId: org.id,
                 name,
                 ownerId,
@@ -334,7 +340,15 @@ export const useStore = create<AppState>((set, get) => ({
                 riskScore: 0
             });
 
+            if (errors) {
+                console.error("Error creating objective:", errors);
+                return;
+            }
+
+            console.log("Objective Created:", newObj);
+
             if (newObj) {
+                console.log("Creating Outcomes...");
                 for (const out of outcomes) {
                     await client.models.Outcome.create({
                         orgId: org.id,
@@ -348,9 +362,10 @@ export const useStore = create<AppState>((set, get) => ({
                     });
                 }
             }
+            console.log("Refreshing Objectives...");
             await get().fetchObjectives();
         } catch (e) {
-            console.error("Create failed", e);
+            console.error("Create failed exception", e);
         }
     },
 

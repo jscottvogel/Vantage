@@ -178,7 +178,14 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (name && targetDate && currentUser) {
+
+        if (!currentUser) {
+            console.error("Cannot create: User session not loaded (currentUser is null).");
+            alert("Your session appears incomplete. Please refresh the page.");
+            return;
+        }
+
+        if (name && targetDate) {
             setIsSubmitting(true);
             try {
                 // Basic validation: Ensure at least one outcome with a goal
@@ -194,6 +201,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
             } finally {
                 setIsSubmitting(false);
             }
+        } else {
+            console.warn("Validation failed: Name or TargetDate missing.");
         }
     };
 
