@@ -84,6 +84,7 @@ interface AppState {
     updateInitiative: (objectiveId: string, krId: string, initiativeId: string, updates: any) => Promise<void>;
 
     addHeartbeat: (targetId: string, targetType: 'objective' | 'keyResult' | 'initiative', heartbeat: Partial<Heartbeat>) => Promise<void>;
+    resetData: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -211,7 +212,12 @@ export const useStore = create<AppState>((set, get) => ({
                         email: userProfile.email,
                         displayName: userProfile.displayName || '',
                         owner: userProfile.owner || ''
-                    } : null,
+                    } : {
+                        userSub: user.id,
+                        email: user.email,
+                        displayName: user.name || '',
+                        owner: user.id
+                    },
                     memberships,
                     currentOrg: activeOrg,
                     currentUser: legacyUser,
@@ -517,6 +523,39 @@ export const useStore = create<AppState>((set, get) => ({
     addHeartbeat: async (_targetId, _targetType, _heartbeat) => {
         // Logic to add heartbeat
         console.log('addHeartbeat placeholder');
+    },
+
+    resetData: async () => {
+        if (!confirm("Are you sure you want to delete ALL data? This cannot be undone.")) return;
+        set({ isLoading: true });
+        try {
+            console.log("Starting data reset...");
+
+            // Helper to delete all items of a model
+            const deleteAll = async (model: any) => {
+                const { data } = await model.list();
+                await Promise.all(data.map((item: any) => model.delete({ id: item.id })));
+            };
+
+            // Delete in order of dependency (Leaf -> Root)
+            await deleteAll(client.models.Heartbeat);
+            await deleteAll(client.models.Initiative);
+            await deleteAll(client.models.KeyResult);
+            await deleteAll(client.models.Outcome);
+            await deleteAll(client.models.StrategicObjective);
+
+            await deleteAll(client.models.Invite);
+            await deleteAll(client.models.Membership);
+            await deleteAll(client.models.Organization);
+            await deleteAll(client.models.UserProfile);
+
+            console.log("Data reset complete. Reloading...");
+            localStorage.clear();
+            window.location.href = '/';
+        } catch (e) {
+            console.error("Reset failed", e);
+            set({ isLoading: false });
+        }
     },
 
 }));

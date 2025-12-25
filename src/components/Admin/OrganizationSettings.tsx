@@ -112,6 +112,26 @@ export function OrganizationSettings() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+            <Card className="border-destructive/50 bg-destructive/5">
+                <CardHeader>
+                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                    <CardDescription>Destructive actions for your organization and account.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <span className="font-semibold text-sm">Reset All Data</span>
+                            <p className="text-sm text-muted-foreground">
+                                Permanently delete all organizations, objectives, and user profiles.
+                                Use this to restart the demo.
+                            </p>
+                        </div>
+                        <Button variant="destructive" onClick={() => useStore.getState().resetData()}>
+                            Reset Data
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div >
     );
 }

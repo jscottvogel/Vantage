@@ -43,6 +43,7 @@ const schema = a.schema({
         // Relations
         memberships: a.hasMany('Membership', 'userSub')
     })
+        .identifier(['userSub'])
         .authorization(allow => [
             allow.owner(), // checks 'owner' field
             allow.authenticated() // Viewable by others (for team UI)
