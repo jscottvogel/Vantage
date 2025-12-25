@@ -18,7 +18,10 @@ export function OrganizationSignUp() {
 
     const handleOrgSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (orgName.trim()) setStep('admin');
+        if (orgName.trim()) {
+            localStorage.setItem('vantage_signup_org_name', orgName);
+            setStep('admin');
+        }
     };
 
     const handleFinalSubmit = async (e: React.FormEvent) => {

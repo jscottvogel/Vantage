@@ -112,20 +112,15 @@ export const useStore = create<AppState>((set, get) => ({
                 return;
             }
 
-            // 2. Resolve User Profile (Schema Agnostic: Use List instead of Get to handle different PKs)
+            // 2. Resolve User Profile
             let userProfile: UserProfile | null = null;
-            let profileIdForFK = user.id; // Default to Sub, but update if DB says otherwise
+            const profileId = user.id;
 
             try {
-                const { data: list } = await client.models.UserProfile.list({
-                    filter: { userSub: { eq: user.id } }
-                });
-
-                let existing = list[0];
+                // Check existence
+                const { data: existing } = await client.models.UserProfile.get({ userSub: profileId });
 
                 if (existing) {
-                    console.log("Profile found via list.");
-                    profileIdForFK = (existing as any)['id'] || existing.userSub; // Capture actual PK for relationships
                     userProfile = {
                         userSub: existing.userSub,
                         email: existing.email,
@@ -133,15 +128,15 @@ export const useStore = create<AppState>((set, get) => ({
                         owner: existing.owner || ''
                     };
                 } else {
-                    console.log("Profile not found. Creating...");
+                    console.log("Profile not found. Creating...", profileId);
                     const { data: newProfile } = await client.models.UserProfile.create({
-                        userSub: user.id,
+                        userSub: profileId,
                         email: user.email,
                         displayName: user.name || user.email.split('@')[0],
-                        owner: user.id
+                        owner: profileId
                     });
+
                     if (newProfile) {
-                        profileIdForFK = (newProfile as any)['id'] || newProfile.userSub; // Capture actual PK
                         userProfile = {
                             userSub: newProfile.userSub,
                             email: newProfile.email,
@@ -151,17 +146,20 @@ export const useStore = create<AppState>((set, get) => ({
                     }
                 }
             } catch (pErr) {
-                console.error("Profile check error:", pErr);
+                console.error("Profile check/create error:", pErr);
+            }
+
+            // Fallback so UI doesn't crash if DB is flaky but Auth is fine
+            if (!userProfile) {
+                userProfile = { userSub: user.id, email: user.email, displayName: user.name || '', owner: user.id };
             }
 
             // 3. Resolve Memberships
             let memberships: Membership[] = [];
             try {
-                // Fetch ALL memberships for this user
-                // CRITICAL: We use profileIdForFK. If schema is new, it's userSub. If old, it's UUID.
-                console.log("Resolving memberships for FK:", profileIdForFK);
+                console.log("Resolving memberships for user:", profileId);
                 const { data: rawMembers } = await client.models.Membership.list({
-                    filter: { userSub: { eq: profileIdForFK } },
+                    filter: { userSub: { eq: profileId } },
                     selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
                 });
 
@@ -169,43 +167,49 @@ export const useStore = create<AppState>((set, get) => ({
                 const validMembers = rawMembers.filter(m => m.organization && m.organization.id);
                 console.log(`Memberships found: ${rawMembers.length} (Valid: ${validMembers.length})`);
 
-                // CLEANUP ZOMBIES (Optional but good for hygiene)
                 if (rawMembers.length > validMembers.length) {
                     const zombies = rawMembers.filter(m => !m.organization || !m.organization.id);
-                    console.log(`Deleting ${zombies.length} zombie memberships...`);
-                    // We don't await this to block flow, but fire and forget
-                    Promise.all(zombies.map(z => client.models.Membership.delete({ id: z.id }))).catch(e => console.error("Zombie cleanup failed", e));
+                    Promise.all(zombies.map(z => client.models.Membership.delete({ id: z.id })));
                 }
 
                 if (validMembers.length === 0) {
                     // --- BOOTSTRAP DEFAULT ORG ---
-                    console.log("No valid memberships found. Bootstrapping Default Org...");
-                    const slug = `my-org-${user.id.substring(0, 5)}-${Math.floor(Date.now() / 1000)}`;
+                    console.log("No valid memberships. Bootstrapping...");
 
+                    // Retrieve stored name or default
+                    const storedName = localStorage.getItem('vantage_signup_org_name');
+                    const orgName = storedName || "My Organization";
+                    // Clear it so we don't reuse it weirdly later
+                    if (storedName) localStorage.removeItem('vantage_signup_org_name');
+
+                    const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-') + `-${Date.now().toString().slice(-4)}`;
+
+                    console.log("Creating Org:", { orgName, slug });
                     const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
-                        name: "My Org",
+                        name: orgName,
                         slug: slug,
                         subscriptionTier: "Free",
                         status: "Active",
-                        createdBySub: user.id
+                        createdBySub: profileId
                     });
 
-                    if (orgErrors) console.error("Org Create Errors:", orgErrors);
+                    if (orgErrors) {
+                        console.error("Org Create Failed:", orgErrors);
+                        throw new Error("Failed to create organization");
+                    }
 
                     if (newOrg) {
-                        // CRITICAL: use profileIdForFK to ensure connection
-                        // Also fallback to "Admin" role if Owner is rejected by old schema enums (defensive)
+                        console.log("Org Created. Creating Membership...");
                         const { data: newMember, errors: memberErrors } = await client.models.Membership.create({
                             orgId: newOrg.id,
-                            userSub: profileIdForFK,
-                            role: "Admin", // Safer default for old schemas
+                            userSub: profileId,
+                            role: "Owner",
                             status: "Active"
                         });
 
-                        if (memberErrors) console.error("Membership Create Errors:", memberErrors);
+                        if (memberErrors) console.error("Membership Create Failed:", memberErrors);
 
                         if (newMember) {
-                            // FAST PATH: Update state immediately
                             memberships = [{
                                 id: newMember.id,
                                 orgId: newMember.orgId,
@@ -215,18 +219,16 @@ export const useStore = create<AppState>((set, get) => ({
                                 organization: {
                                     ...newOrg,
                                     slug: newOrg.slug,
-                                    subscriptionTier: (newOrg.subscriptionTier as any) || 'Free',
+                                    subscriptionTier: 'Free',
                                     createdAt: new Date().toISOString(),
                                     updatedAt: new Date().toISOString()
                                 } as any
                             }];
-                            console.log("Bootstrap complete. Org created and state updated.");
+                            console.log("Bootstrap success.");
                         }
-                    } else {
-                        console.error("Failed to create Org. check backend logs.");
                     }
                 } else {
-                    // --- MAP EXISITING VALID MEMBERSHIPS ---
+                    // --- MAP EXISTING ---
                     memberships = validMembers.map(m => ({
                         id: m.id,
                         orgId: m.orgId,
