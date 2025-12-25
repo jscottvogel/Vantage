@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { useStore } from "./store";
 import { Dashboard } from "./components/Dashboard";
@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 
 
 function ProtectedApp() {
-  const { isLoading, checkSession, currentOrg } = useStore();
+  const { isLoading, checkSession } = useStore();
 
   useEffect(() => {
     checkSession();
