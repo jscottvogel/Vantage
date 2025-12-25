@@ -12,6 +12,15 @@ import type {
 
 const client = generateClient<Schema>();
 
+// Helper to Map Schema Org to Domain Org
+const mapOrg = (amplifyOrg: any): DomainOrganization => {
+    return {
+        ...amplifyOrg,
+        subscriptionTier: (amplifyOrg.subscriptionTier as any) || 'Free',
+        status: (amplifyOrg.status as any) || 'Active'
+    };
+};
+
 // --- State Types ---
 // We use the Domain Types for state to satisfy components
 
@@ -147,7 +156,10 @@ export const useStore = create<AppState>((set, get) => ({
                 // Determine active org from local storage or pick first
                 const savedId = localStorage.getItem('vantage_active_org');
                 const match = validMemberships.find(m => m.orgId === savedId);
-                activeOrg = match ? match.organization : validMemberships[0].organization;
+                // Use helper to map
+                const rawOrg = match ? match.organization : validMemberships[0].organization;
+                activeOrg = mapOrg(rawOrg);
+
                 if (activeOrg) localStorage.setItem('vantage_active_org', activeOrg.id);
             }
 
@@ -165,22 +177,10 @@ export const useStore = create<AppState>((set, get) => ({
                     userSub: m.userSub,
                     role: m.role as any,
                     status: m.status as any,
-                    organization: {
-                        ...m.organization,
-                        subscriptionTier: m.organization?.subscriptionTier as any || 'Free',
-                        status: m.organization?.status as any || 'Active'
-                    } as any
+                    organization: mapOrg(m.organization)
                 })),
-                currentOrg: activeOrg ? {
-                    ...activeOrg,
-                    subscriptionTier: activeOrg.subscriptionTier as any || 'Free',
-                    status: activeOrg.status as any || 'Active'
-                } as any : null,
-                currentOrganization: activeOrg ? {
-                    ...activeOrg,
-                    subscriptionTier: activeOrg.subscriptionTier as any || 'Free',
-                    status: activeOrg.status as any || 'Active'
-                } as any : null,
+                currentOrg: activeOrg,
+                currentOrganization: activeOrg,
                 currentUser: null, // Deprecated
                 isLoading: false
             });
@@ -207,16 +207,11 @@ export const useStore = create<AppState>((set, get) => ({
         try {
             // Strict Requirement: Name is "My Org"
             const orgName = "My Org";
-            const slug = `my-org-${Date.now().toString().slice(-6)}`;
 
             // 1. Create Org
             console.log("Creating Organization...");
             const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
-                name: orgName,
-                slug: slug,
-                subscriptionTier: "Free",
-                status: "Active",
-                createdBySub: user.id
+                name: orgName
             });
 
             if (orgErrors || !newOrg) {
@@ -242,27 +237,22 @@ export const useStore = create<AppState>((set, get) => ({
 
             console.log("Bootstrap Success. Updating State Manually...");
 
-            // Constructs
-            const newOrgState = {
-                ...newOrg,
-                subscriptionTier: newOrg.subscriptionTier as any || 'Free',
-                status: newOrg.status as any || 'Active'
-            } as any;
-
-            const newMemberState = {
+            // Clean Adapter Usage
+            const domainOrg = mapOrg(newOrg);
+            const domainMember = {
                 id: newMember.id,
                 orgId: newOrg.id,
                 userSub: user.id,
                 role: newMember.role as any,
                 status: newMember.status as any,
-                organization: newOrgState
+                organization: domainOrg
             };
 
             // Manual State Update to Avoid Consistency Lag Loop
             set({
-                memberships: [newMemberState],
-                currentOrg: newOrgState,
-                currentOrganization: newOrgState,
+                memberships: [domainMember],
+                currentOrg: domainOrg,
+                currentOrganization: domainOrg,
                 isLoading: false
             });
 

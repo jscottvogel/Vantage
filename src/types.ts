@@ -10,7 +10,6 @@ export type SubscriptionTier = 'Free' | 'Pro' | 'Enterprise';
 export interface Organization {
     id: string;
     name: string;
-    slug: string; // Added for correct routing
     domain?: string;
     subscriptionTier: SubscriptionTier;
     ssoSettings?: {
