@@ -15,19 +15,26 @@ function OrgGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && slug && memberships.length > 0) {
-      // Find org by slug
+    if (!isLoading && slug) {
+      if (memberships.length === 0) {
+        navigate('/');
+        return;
+      }
+
       const match = memberships.find(m => m.organization?.slug === slug);
       if (match && match.orgId !== currentOrg?.id) {
         switchOrganization(match.orgId);
       } else if (!match) {
-        // Unauthorized or Invalid Slug
         navigate('/');
       }
     }
   }, [slug, memberships, isLoading, currentOrg, switchOrganization, navigate]);
 
   if (isLoading || (slug && !currentOrg)) {
+    // If we have no memberships and aren't loading, we shouldn't be trapped here. 
+    // The effect above handles redirection, but render needs to be safe.
+    if (!isLoading && memberships.length === 0) return null;
+
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 

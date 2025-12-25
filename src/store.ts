@@ -159,7 +159,7 @@ export const useStore = create<AppState>((set, get) => ({
                 if (memberList.length === 0) {
                     console.log("No memberships. Bootstrapping Default Org...");
 
-                    const slug = `my-org-${user.id.substring(0, 8)}`;
+                    const slug = `my-org-${user.id.substring(0, 5)}-${Date.now()}`;
                     const { data: newOrg } = await client.models.Organization.create({
                         name: "My Org",
                         slug: slug,
