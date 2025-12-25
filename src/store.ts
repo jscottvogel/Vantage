@@ -198,7 +198,7 @@ export const useStore = create<AppState>((set, get) => ({
             }
 
             // 6. Update State
-            console.log("Updating Store State:", { org: activeOrg?.name, members: memberships.length });
+            console.log("Updating Store State:", { org: activeOrg?.name, members: loadedMemberships.length });
 
             set({
                 userProfile: profile ? {
