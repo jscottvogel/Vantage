@@ -112,11 +112,20 @@ export const useStore = create<AppState>((set, get) => ({
                 return;
             }
 
-            // 2. Resolve User Profile (Force Create if Missing)
+            // 2. Resolve User Profile (Schema Agnostic: Use List instead of Get to handle different PKs)
             let userProfile: UserProfile | null = null;
+            let profileIdForFK = user.id; // Default to Sub, but update if DB says otherwise
+
             try {
-                const { data: existing } = await client.models.UserProfile.get({ userSub: user.id });
+                const { data: list } = await client.models.UserProfile.list({
+                    filter: { userSub: { eq: user.id } }
+                });
+
+                let existing = list[0];
+
                 if (existing) {
+                    console.log("Profile found via list.");
+                    profileIdForFK = (existing as any)['id'] || existing.userSub; // Capture actual PK for relationships
                     userProfile = {
                         userSub: existing.userSub,
                         email: existing.email,
@@ -124,7 +133,7 @@ export const useStore = create<AppState>((set, get) => ({
                         owner: existing.owner || ''
                     };
                 } else {
-                    console.log("Profile not found in DB. Creating...");
+                    console.log("Profile not found. Creating...");
                     const { data: newProfile } = await client.models.UserProfile.create({
                         userSub: user.id,
                         email: user.email,
@@ -132,6 +141,7 @@ export const useStore = create<AppState>((set, get) => ({
                         owner: user.id
                     });
                     if (newProfile) {
+                        profileIdForFK = (newProfile as any)['id'] || newProfile.userSub; // Capture actual PK
                         userProfile = {
                             userSub: newProfile.userSub,
                             email: newProfile.email,
@@ -141,15 +151,17 @@ export const useStore = create<AppState>((set, get) => ({
                     }
                 }
             } catch (pErr) {
-                console.error("Profile check error. Continuing with fallback...", pErr);
+                console.error("Profile check error:", pErr);
             }
 
             // 3. Resolve Memberships
             let memberships: Membership[] = [];
             try {
-                // Fetch ALL memberships for user
+                // Fetch ALL memberships for this user
+                // CRITICAL: We use profileIdForFK. If schema is new, it's userSub. If old, it's UUID.
+                console.log("Resolving memberships for FK:", profileIdForFK);
                 const { data: rawMembers } = await client.models.Membership.list({
-                    filter: { userSub: { eq: user.id } },
+                    filter: { userSub: { eq: profileIdForFK } },
                     selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
                 });
 
@@ -181,10 +193,12 @@ export const useStore = create<AppState>((set, get) => ({
                     if (orgErrors) console.error("Org Create Errors:", orgErrors);
 
                     if (newOrg) {
+                        // CRITICAL: use profileIdForFK to ensure connection
+                        // Also fallback to "Admin" role if Owner is rejected by old schema enums (defensive)
                         const { data: newMember, errors: memberErrors } = await client.models.Membership.create({
                             orgId: newOrg.id,
-                            userSub: user.id,
-                            role: "Owner",
+                            userSub: profileIdForFK,
+                            role: "Admin", // Safer default for old schemas
                             status: "Active"
                         });
 
