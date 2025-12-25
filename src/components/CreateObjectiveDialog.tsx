@@ -228,7 +228,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                         <div className="border-b pb-4 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Objective Name</label>
+                                    <label htmlFor="objective-name" className="text-sm font-medium">Objective Name</label>
                                     <input
                                         id="objective-name"
                                         name="objective-name"
@@ -240,7 +240,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Strategic Value</label>
+                                    <label htmlFor="strategic-value" className="text-sm font-medium">Strategic Value</label>
                                     <select
                                         id="strategic-value"
                                         name="strategic-value"
@@ -255,7 +255,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Target Date</label>
+                                <label htmlFor="objective-target-date" className="text-sm font-medium">Target Date</label>
                                 <input
                                     id="objective-target-date"
                                     name="objective-target-date"
@@ -295,7 +295,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                         {/* Outcome Fields */}
                                         <div className="space-y-4 mb-4">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal (The 'What')</label>
+                                                <label htmlFor={`outcome-${oIndex}-goal`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal (The 'What')</label>
                                                 <textarea
                                                     id={`outcome-${oIndex}-goal`}
                                                     name={`outcome-${oIndex}-goal`}
@@ -307,7 +307,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Benefit (The 'Why')</label>
+                                                <label htmlFor={`outcome-${oIndex}-benefit`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Benefit (The 'Why')</label>
                                                 <textarea
                                                     id={`outcome-${oIndex}-benefit`}
                                                     name={`outcome-${oIndex}-benefit`}
@@ -321,7 +321,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                         </div>
                                         <div className="grid grid-cols-4 gap-4 mb-4">
                                             <div className="space-y-2 col-span-2">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</label>
+                                                <label htmlFor={`outcome-${oIndex}-owner`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</label>
                                                 <select
                                                     id={`outcome-${oIndex}-owner`}
                                                     name={`outcome-${oIndex}-owner`}
@@ -336,7 +336,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Start Date</label>
+                                                <label htmlFor={`outcome-${oIndex}-start-date`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Start Date</label>
                                                 <input
                                                     id={`outcome-${oIndex}-start-date`}
                                                     name={`outcome-${oIndex}-start-date`}
@@ -347,7 +347,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Date</label>
+                                                <label htmlFor={`outcome-${oIndex}-target-date`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Date</label>
                                                 <input
                                                     id={`outcome-${oIndex}-target-date`}
                                                     name={`outcome-${oIndex}-target-date`}
@@ -358,7 +358,7 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                 />
                                             </div>
                                             <div className="space-y-2 col-span-4">
-                                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Heartbeat Schedule</label>
+                                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Heartbeat Schedule</span>
                                                 <div className="flex gap-2">
                                                     <select
                                                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"

@@ -113,7 +113,22 @@ export const useStore = create<AppState>((set, get) => ({
                 const { data: profileList } = await client.models.UserProfile.list({
                     filter: { userSub: { eq: user.id } }
                 });
-                const userProfile = profileList[0] || null;
+                let userProfile = profileList[0] || null;
+
+                if (!userProfile) {
+                    console.log("UserProfile missing. Creating...");
+                    try {
+                        const { data: newProfile } = await client.models.UserProfile.create({
+                            userSub: user.id,
+                            email: user.email,
+                            displayName: user.name,
+                            owner: user.id
+                        });
+                        userProfile = newProfile;
+                    } catch (e) {
+                        console.error("Failed to create UserProfile", e);
+                    }
+                }
 
                 // 2. Fetch Memberships
                 const { data: memberList } = await client.models.Membership.list({

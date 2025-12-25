@@ -130,7 +130,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                         {/* Section 1: Aggregated Confidence */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Overall Confidence</label>
+                                <span className="text-sm font-medium">Overall Confidence</span>
                                 <div className="flex gap-2">
                                     {['High', 'Medium', 'Low'].map((c) => (
                                         <button
@@ -145,7 +145,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Confidence Trend</label>
+                                <span className="text-sm font-medium">Confidence Trend</span>
                                 <div className="flex gap-2">
                                     {[
                                         { val: 'Improving', icon: <TrendingUp className="w-4 h-4 text-green-600 mb-1" /> },
@@ -168,8 +168,10 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
 
                         {/* Section 2: Narrative */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Heartbeat Summary (Executive View)</label>
+                            <label htmlFor="hb-summary" className="text-sm font-medium">Heartbeat Summary (Executive View)</label>
                             <textarea
+                                id="hb-summary"
+                                name="hb-summary"
                                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 placeholder="2-4 sentences explaining the current outlook..."
                                 value={summary}
@@ -182,7 +184,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-3">
                                 <div className="flex justify-between">
-                                    <label className="text-sm font-medium flex items-center gap-2 text-green-700">Confidence Drivers</label>
+                                    <span className="text-sm font-medium flex items-center gap-2 text-green-700">Confidence Drivers</span>
                                     <Button type="button" size="sm" variant="ghost" onClick={() => addToArray(setConfidenceDrivers, confidenceDrivers)}>+</Button>
                                 </div>
                                 {confidenceDrivers.map((d, i) => (
@@ -194,7 +196,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                             </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between">
-                                    <label className="text-sm font-medium flex items-center gap-2 text-red-700">Risk Drivers</label>
+                                    <span className="text-sm font-medium flex items-center gap-2 text-red-700">Risk Drivers</span>
                                     <Button type="button" size="sm" variant="ghost" onClick={() => addToArray(setRiskDrivers, riskDrivers)}>+</Button>
                                 </div>
                                 {riskDrivers.map((d, i) => (
@@ -212,7 +214,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-amber-800">Known Unknowns</label>
+                                    <span className="text-xs font-semibold text-amber-800">Known Unknowns</span>
                                     {knownUnknowns.map((d, i) => (
                                         <div key={i} className="flex gap-2">
                                             <input className="flex h-8 w-full rounded-md border border-amber-200 text-sm px-2" value={d} onChange={e => updateArray(setKnownUnknowns, knownUnknowns, i, e.target.value)} />
@@ -223,7 +225,7 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-amber-800">Information Gaps</label>
+                                    <span className="text-xs font-semibold text-amber-800">Information Gaps</span>
                                     {gaps.map((d, i) => (
                                         <div key={i} className="flex gap-2">
                                             <input className="flex h-8 w-full rounded-md border border-amber-200 text-sm px-2" value={d} onChange={e => updateArray(setGaps, gaps, i, e.target.value)} />
@@ -235,8 +237,10 @@ export function KeyResultHeartbeatDialog({ objectiveId, keyResultId, onClose }: 
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-amber-800">Confidence Limitations (Explicit Statement)</label>
+                                <label htmlFor="hb-limitations" className="text-xs font-semibold text-amber-800">Confidence Limitations (Explicit Statement)</label>
                                 <input
+                                    id="hb-limitations"
+                                    name="hb-limitations"
                                     className="flex h-9 w-full rounded-md border border-amber-200 text-sm px-3"
                                     placeholder="e.g. Confidence is limited by pending user feedback results..."
                                     value={limitations}

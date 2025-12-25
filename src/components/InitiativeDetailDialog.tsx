@@ -244,19 +244,19 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Period Start</label>
-                                    <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
+                                    <label htmlFor="hb-period-start" className="text-sm font-medium">Period Start</label>
+                                    <input id="hb-period-start" name="hb-period-start" type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
                                         value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Period End</label>
-                                    <input type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
+                                    <label htmlFor="hb-period-end" className="text-sm font-medium">Period End</label>
+                                    <input id="hb-period-end" name="hb-period-end" type="date" required className="flex h-9 w-full rounded-md border border-input px-3"
                                         value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Health Signal</label>
+                                <span className="text-sm font-medium">Health Signal</span>
                                 <div className="flex gap-4">
                                     {['green', 'yellow', 'red'].map((color) => (
                                         <label key={color} className="flex items-center gap-2 cursor-pointer border p-3 rounded-md has-[:checked]:bg-muted">
@@ -270,7 +270,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                             {/* Indicators */}
                             <div className="space-y-3 border p-4 rounded-md">
                                 <div className="flex justify-between">
-                                    <label className="text-sm font-medium">Leading Indicators</label>
+                                    <span className="text-sm font-medium">Leading Indicators</span>
                                     <Button type="button" size="sm" variant="outline" onClick={handleAddIndicator}>Add Indicator</Button>
                                 </div>
                                 {indicators.map((ind, i) => (
@@ -298,7 +298,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                             {/* Evidence */}
                             <div className="space-y-3 border p-4 rounded-md">
                                 <div className="flex justify-between">
-                                    <label className="text-sm font-medium">Evidence</label>
+                                    <span className="text-sm font-medium">Evidence</span>
                                     <Button type="button" size="sm" variant="outline" onClick={handleAddEvidence}>Add Evidence</Button>
                                 </div>
                                 {evidenceList.map((ev, i) => (
@@ -325,7 +325,7 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                             {/* Risks */}
                             <div className="space-y-3 border p-4 rounded-md">
                                 <div className="flex justify-between">
-                                    <label className="text-sm font-medium">Risks</label>
+                                    <span className="text-sm font-medium">Risks</span>
                                     <Button type="button" size="sm" variant="outline" onClick={handleAddRisk}>Add Risk</Button>
                                 </div>
                                 {risks.map((risk, i) => (
@@ -339,8 +339,8 @@ export function InitiativeDetailDialog({ objectiveId, initiativeId, onClose }: I
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Confidence: {(confidence * 100).toFixed(0)}%</label>
-                                <input type="range" min="0" max="1" step="0.05" className="w-full"
+                                <label htmlFor="hb-confidence" className="text-sm font-medium">Confidence: {(confidence * 100).toFixed(0)}%</label>
+                                <input id="hb-confidence" name="hb-confidence" type="range" min="0" max="1" step="0.05" className="w-full"
                                     value={confidence} onChange={e => setConfidence(parseFloat(e.target.value))} />
                             </div>
 

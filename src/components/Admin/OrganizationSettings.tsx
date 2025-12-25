@@ -41,7 +41,7 @@ export function OrganizationSettings() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-2">
-                        <label className="text-sm font-medium">Organization Name</label>
+                        <label htmlFor="org-name" className="text-sm font-medium">Organization Name</label>
                         <div className="flex gap-2">
                             <input
                                 id="org-name"
@@ -102,11 +102,11 @@ export function OrganizationSettings() {
                 <CardContent>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Identity Provider</label>
+                            <label htmlFor="sso-provider" className="text-sm font-medium">Identity Provider</label>
                             <input id="sso-provider" name="sso-provider" disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="e.g. Okta" />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Metadata URL</label>
+                            <label htmlFor="sso-url" className="text-sm font-medium">Metadata URL</label>
                             <input id="sso-url" name="sso-url" disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="https://..." />
                         </div>
                     </div>
