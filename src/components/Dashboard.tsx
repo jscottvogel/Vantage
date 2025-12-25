@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { Link } from 'react-router-dom';
 import { ObjectiveCard } from './ObjectiveCard';

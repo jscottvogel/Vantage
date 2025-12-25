@@ -165,10 +165,22 @@ export const useStore = create<AppState>((set, get) => ({
                     userSub: m.userSub,
                     role: m.role as any,
                     status: m.status as any,
-                    organization: m.organization
+                    organization: {
+                        ...m.organization,
+                        subscriptionTier: m.organization?.subscriptionTier as any || 'Free',
+                        status: m.organization?.status as any || 'Active'
+                    } as any
                 })),
-                currentOrg: activeOrg,
-                currentOrganization: activeOrg,
+                currentOrg: activeOrg ? {
+                    ...activeOrg,
+                    subscriptionTier: activeOrg.subscriptionTier as any || 'Free',
+                    status: activeOrg.status as any || 'Active'
+                } as any : null,
+                currentOrganization: activeOrg ? {
+                    ...activeOrg,
+                    subscriptionTier: activeOrg.subscriptionTier as any || 'Free',
+                    status: activeOrg.status as any || 'Active'
+                } as any : null,
                 currentUser: null, // Deprecated
                 isLoading: false
             });
