@@ -238,8 +238,31 @@ export const useStore = create<AppState>((set, get) => ({
                 throw new Error("Failed to create membership.");
             }
 
-            console.log("Bootstrap Success. Refreshing session...");
-            await get().checkSession();
+            console.log("Bootstrap Success. Updating State Manually...");
+
+            // Constructs
+            const newOrgState = {
+                ...newOrg,
+                subscriptionTier: newOrg.subscriptionTier as any || 'Free',
+                status: newOrg.status as any || 'Active'
+            } as any;
+
+            const newMemberState = {
+                id: newMember.id,
+                orgId: newOrg.id,
+                userSub: user.id,
+                role: newMember.role as any,
+                status: newMember.status as any,
+                organization: newOrgState
+            };
+
+            // Manual State Update to Avoid Consistency Lag Loop
+            set({
+                memberships: [newMemberState],
+                currentOrg: newOrgState,
+                currentOrganization: newOrgState,
+                isLoading: false
+            });
 
         } catch (e: any) {
             console.error("Bootstrap Failed", e);
