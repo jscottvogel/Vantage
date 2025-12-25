@@ -178,7 +178,8 @@ export const useStore = create<AppState>((set, get) => ({
 
                     // Retrieve stored name or default
                     const storedName = localStorage.getItem('vantage_signup_org_name');
-                    const orgName = storedName || "My Organization";
+                    // Requirement: Default to "My Org" if not specified
+                    const orgName = storedName || "My Org";
                     // Clear it so we don't reuse it weirdly later
                     if (storedName) localStorage.removeItem('vantage_signup_org_name');
 
