@@ -113,10 +113,9 @@ export const useStore = create<AppState>((set, get) => ({
             }
             console.log("Auth User Found:", user.id);
 
-            // 2. Ensure User Identity (UserProfile) Exists in DB
+            // 2. Resolve User Profile (Force Create if Missing)
             let userProfile: UserProfile | null = null;
             try {
-                // Try to get existing profile using PK
                 const { data: existing } = await client.models.UserProfile.get({ userSub: user.id });
                 if (existing) {
                     userProfile = {
@@ -126,7 +125,7 @@ export const useStore = create<AppState>((set, get) => ({
                         owner: existing.owner || ''
                     };
                 } else {
-                    console.log("Profile not found in DB, creating...");
+                    console.log("Profile not found in DB. Creating...");
                     const { data: newProfile } = await client.models.UserProfile.create({
                         userSub: user.id,
                         email: user.email,
@@ -143,11 +142,10 @@ export const useStore = create<AppState>((set, get) => ({
                     }
                 }
             } catch (pErr) {
-                console.error("Error ensuring UserProfile:", pErr);
-                // Non-fatal: State fallback will handle UI, though features requiring DB profile might warn.
+                console.error("Profile check error. Continuing with fallback...", pErr);
             }
 
-            // 3. Fetch Memberships & Bootstrap Default Org if needed
+            // 3. Resolve Memberships
             let memberships: Membership[] = [];
             try {
                 const { data: memberList } = await client.models.Membership.list({
@@ -155,11 +153,11 @@ export const useStore = create<AppState>((set, get) => ({
                     selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
                 });
 
-                // If NO memberships found (New User), Bootstrapping Default Org
                 if (memberList.length === 0) {
-                    console.log("No memberships. Bootstrapping Default Org...");
+                    // --- BOOTSTRAP DEFAULT ORG ---
+                    console.log("No memberships found. Bootstrapping Default Org...");
+                    const slug = `my-org-${user.id.substring(0, 5)}-${Math.floor(Date.now() / 1000)}`; // Shorter TS for URL safety
 
-                    const slug = `my-org-${user.id.substring(0, 5)}-${Date.now()}`;
                     const { data: newOrg } = await client.models.Organization.create({
                         name: "My Org",
                         slug: slug,
@@ -176,8 +174,8 @@ export const useStore = create<AppState>((set, get) => ({
                             status: "Active"
                         });
 
-                        // Manually construct membership object to avoid Refetch Race Conditions
                         if (newMember) {
+                            // Manually push to state to avoid refetch latency
                             memberships = [{
                                 id: newMember.id,
                                 orgId: newMember.orgId,
@@ -186,54 +184,51 @@ export const useStore = create<AppState>((set, get) => ({
                                 status: newMember.status as any,
                                 organization: {
                                     ...newOrg,
+                                    slug: newOrg.slug,
                                     subscriptionTier: (newOrg.subscriptionTier as any) || 'Free',
                                     createdAt: new Date().toISOString(),
                                     updatedAt: new Date().toISOString()
                                 } as any
                             }];
-                            console.log("Bootstrap complete. Org and Membership created.");
                         }
                     }
                 } else {
-                    // Map existing memberships
-                    memberships = memberList.map(m => ({
-                        id: m.id,
-                        orgId: m.orgId,
-                        userSub: m.userSub,
-                        role: m.role as any,
-                        status: m.status as any,
-                        organization: m.organization ? {
-                            ...m.organization,
-                            slug: m.organization.slug,
-                            subscriptionTier: (m.organization.subscriptionTier as any) || 'Free',
-                            createdAt: m.organization.createdAt || new Date().toISOString(),
-                            updatedAt: m.organization.updatedAt || new Date().toISOString()
-                        } as any : undefined
-                    })).filter(m => m.organization !== undefined); // Safely filter out broken links
+                    // --- PROCESS EXISITING MEMBERSHIPS ---
+                    memberships = memberList
+                        .filter(m => m.organization) // Filter orphan memberships
+                        .map(m => ({
+                            id: m.id,
+                            orgId: m.orgId,
+                            userSub: m.userSub,
+                            role: m.role as any,
+                            status: m.status as any,
+                            organization: {
+                                ...m.organization,
+                                slug: m.organization!.slug,
+                                subscriptionTier: (m.organization!.subscriptionTier as any) || 'Free',
+                                createdAt: m.organization!.createdAt || new Date().toISOString(),
+                                updatedAt: m.organization!.updatedAt || new Date().toISOString()
+                            } as any
+                        }));
                 }
-
             } catch (mErr) {
-                console.error("Error resolving memberships:", mErr);
+                console.error("Membership resolution error", mErr);
             }
 
             // 4. Resolve Active Organization
             let activeOrg: any = null;
             const savedOrgId = localStorage.getItem('vantage_active_org');
 
-            // Try to restore last active org
             if (savedOrgId) {
                 const match = memberships.find(m => m.orgId === savedOrgId);
-                if (match && match.organization) activeOrg = match.organization;
+                if (match) activeOrg = match.organization;
             }
 
-            // Fallback to first available org
             if (!activeOrg && memberships.length > 0) {
-                const first = memberships.find(m => m.organization);
-                if (first && first.organization) activeOrg = first.organization;
+                activeOrg = memberships[0].organization;
             }
 
-            // 5. Construct State Objects
-            // Legacy User object for compatibility
+            // 5. Construct Legacy User Object (Safe Fallback)
             const legacyUser: User = {
                 id: userProfile?.userSub || user.id,
                 email: userProfile?.email || user.email,
@@ -243,15 +238,9 @@ export const useStore = create<AppState>((set, get) => ({
                 status: 'Active'
             };
 
-            // Final State Update
+            // 6. UPDATE STATE
             set({
-                userProfile: userProfile ? {
-                    userSub: userProfile.userSub,
-                    email: userProfile.email,
-                    displayName: userProfile.displayName || '',
-                    owner: userProfile.owner || ''
-                } : {
-                    // Critical Fallback to ensure UI works even if DB profile create failed
+                userProfile: userProfile ? userProfile : {
                     userSub: user.id,
                     email: user.email,
                     displayName: user.name || '',
@@ -263,10 +252,10 @@ export const useStore = create<AppState>((set, get) => ({
                 currentOrganization: activeOrg
             });
 
-            // 6. Fetch Org Data if active
+            // 7. Data Fetch Trigger
             if (activeOrg) {
-                await get().fetchObjectives();
-                await get().fetchTeam();
+                get().fetchObjectives();
+                get().fetchTeam();
             }
 
         } catch (error) {
