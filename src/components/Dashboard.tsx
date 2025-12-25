@@ -14,6 +14,14 @@ export function Dashboard() {
     const objectives = useStore(state => state.objectives);
     const logout = useStore(state => state.logout);
     const user = useStore(state => state.userProfile);
+    const { currentOrg, memberships, isLoading, bootstrapOrganization } = useStore();
+
+    // Auto-bootstrap if new user
+    useEffect(() => {
+        if (!isLoading && !currentOrg && memberships.length === 0) {
+            bootstrapOrganization();
+        }
+    }, [isLoading, currentOrg, memberships, bootstrapOrganization]);
 
     // Modal State
     const [isCreateOpen, setCreateOpen] = useState(false);

@@ -53,6 +53,7 @@ interface AppState {
 
     // Actions
     checkSession: () => Promise<void>;
+    bootstrapOrganization: () => Promise<void>;
     login: (email: string, password?: string) => Promise<'SUCCESS' | 'NOT_CONFIRMED' | 'FAILED' | 'EXISTS'>;
     logout: () => Promise<void>;
     signupOrganization: (orgName: string, adminEmail: string, adminName: string, password?: string) => Promise<string>;
@@ -102,104 +103,55 @@ export const useStore = create<AppState>((set, get) => ({
 
     checkSession: async () => {
         set({ isLoading: true });
-        console.log("--- Session Check Start ---");
-
+        console.log("--- Session Check (Simple) ---");
         try {
             // 1. Authenticate
             const user = await AuthService.getCurrentUser();
             if (!user) {
-                console.log("No auth user. Resetting state.");
                 set({ userProfile: null, memberships: [], currentOrg: null, isLoading: false });
                 return;
             }
 
-            // 2. Get or Create User Profile
-            // We use user.id (Cognito Sub) as the primary key strictly.
+            // 2. Ensure User Profile
             let profile = null;
             try {
                 const { data: existing } = await client.models.UserProfile.get({ userSub: user.id });
                 if (existing) {
                     profile = existing;
                 } else {
-                    console.log("Creating new UserProfile...");
+                    console.log("Creating UserProfile...");
                     const { data: newProfile } = await client.models.UserProfile.create({
                         userSub: user.id,
                         email: user.email,
-                        displayName: user.name || user.email.split('@')[0],
+                        displayName: user.name || 'User',
                         owner: user.id
                     });
                     profile = newProfile;
                 }
-            } catch (err) {
-                console.error("Profile Error:", err);
+            } catch (pErr) {
+                console.error("Profile Error", pErr);
             }
 
             // 3. Fetch Memberships
-            // This determines if we need to bootstrap an Org.
-            let loadedMemberships: any[] = [];
-
             const { data: allMemberships } = await client.models.Membership.list({
                 filter: { userSub: { eq: user.id } },
                 selectionSet: ['id', 'userSub', 'orgId', 'role', 'status', 'organization.*']
             });
 
-            // Filter for valid connected organizations
-            loadedMemberships = allMemberships.filter(m => m.organization && m.organization.id);
+            const validMemberships = allMemberships.filter(m => m.organization && m.organization.id);
+            console.log(`Memberships Found: ${validMemberships.length}`);
 
-            // 4. Bootstrap "My Org" if New User
-            if (loadedMemberships.length === 0) {
-                console.log("No Memberships. Creating Default 'My Org'...");
-
-                // A. Create Org
-                const storedName = localStorage.getItem('vantage_signup_org_name');
-                const orgName = storedName || "My Org";
-                if (storedName) localStorage.removeItem('vantage_signup_org_name');
-
-                const slug = `my-org-${Date.now().toString().slice(-6)}`;
-                const { data: newOrg } = await client.models.Organization.create({
-                    name: orgName,
-                    slug: slug,
-                    subscriptionTier: "Free",
-                    status: "Active",
-                    createdBySub: user.id
-                });
-
-                if (newOrg) {
-                    console.log("Org Created:", newOrg.id);
-                    // B. Create Owner Membership
-                    const { data: newMember } = await client.models.Membership.create({
-                        orgId: newOrg.id,
-                        userSub: user.id,
-                        role: "Owner",
-                        status: "Active"
-                    });
-
-                    if (newMember) {
-                        console.log("Membership Created. Bootstrapping Complete.");
-                        // Push to local array so UI updates immediately
-                        loadedMemberships.push({
-                            ...newMember,
-                            organization: newOrg
-                        });
-                    }
-                }
-            }
-
-            // 5. Determine Active Context
+            // 4. Determine Active Org
             let activeOrg = null;
-            if (loadedMemberships.length > 0) {
-                // Prefer last active, otherwise first
+            if (validMemberships.length > 0) {
+                // Determine active org from local storage or pick first
                 const savedId = localStorage.getItem('vantage_active_org');
-                const match = loadedMemberships.find(m => m.orgId === savedId);
-                activeOrg = match ? match.organization : loadedMemberships[0].organization;
-
-                // Persist choice
+                const match = validMemberships.find(m => m.orgId === savedId);
+                activeOrg = match ? match.organization : validMemberships[0].organization;
                 if (activeOrg) localStorage.setItem('vantage_active_org', activeOrg.id);
             }
 
-            // 6. Update State
-            console.log("Updating Store State:", { org: activeOrg?.name, members: loadedMemberships.length });
-
+            // 5. Update State
             set({
                 userProfile: profile ? {
                     userSub: profile.userSub,
@@ -207,7 +159,7 @@ export const useStore = create<AppState>((set, get) => ({
                     displayName: profile.displayName || '',
                     owner: profile.owner || ''
                 } : null,
-                memberships: loadedMemberships.map(m => ({
+                memberships: validMemberships.map(m => ({
                     id: m.id,
                     orgId: m.orgId,
                     userSub: m.userSub,
@@ -216,21 +168,70 @@ export const useStore = create<AppState>((set, get) => ({
                     organization: m.organization
                 })),
                 currentOrg: activeOrg,
-                // Legacy / Compat
-                currentUser: { id: user.id, email: user.email, name: user.name || '', role: 'Owner', tenantId: activeOrg?.id, status: 'Active' },
-                currentOrganization: activeOrg
+                currentOrganization: activeOrg,
+                currentUser: null, // Deprecated
+                isLoading: false
             });
 
-            // 7. Load Data
+            // 6. Data Load (if org exists)
             if (activeOrg) {
                 get().fetchObjectives();
                 get().fetchTeam();
             }
 
-        } catch (fatal) {
-            console.error("Critical Session Error:", fatal);
-        } finally {
+        } catch (e) {
+            console.error("Session Check Failed", e);
             set({ isLoading: false });
+        }
+    },
+
+    bootstrapOrganization: async () => {
+        const user = await AuthService.getCurrentUser();
+        if (!user) return;
+
+        console.log("--- Bootstrapping My Org ---");
+        set({ isLoading: true });
+
+        try {
+            // Strict Requirement: Name is "My Org"
+            const orgName = "My Org";
+            const slug = `my-org-${Date.now().toString().slice(-6)}`;
+
+            // 1. Create Org
+            console.log("Creating Organization...");
+            const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
+                name: orgName,
+                slug: slug,
+                subscriptionTier: "Free",
+                status: "Active",
+                createdBySub: user.id
+            });
+
+            if (orgErrors || !newOrg) {
+                console.error("Org Creation Failed", orgErrors);
+                throw new Error("Failed to create organization.");
+            }
+
+            // 2. Create Membership
+            console.log("Creating Owner Membership...");
+            const { data: newMember, errors: memErrors } = await client.models.Membership.create({
+                orgId: newOrg.id,
+                userSub: user.id,
+                role: "Owner",
+                status: "Active"
+            });
+
+            if (memErrors || !newMember) {
+                console.error("Membership Creation Failed", memErrors);
+                throw new Error("Failed to create membership.");
+            }
+
+            console.log("Bootstrap Success. Refreshing session...");
+            await get().checkSession();
+
+        } catch (e: any) {
+            console.error("Bootstrap Failed", e);
+            set({ authError: e.message || "Setup failed", isLoading: false });
         }
     },
 

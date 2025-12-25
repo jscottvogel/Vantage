@@ -42,6 +42,8 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
         }
 
         // 2. Create Organization & Membership (If this was an Org Sign Up)
+        /* 
+        // DISABLED FOR FRONTEND BOOTSTRAP CONTROL
         if (tenantId && orgName) {
             const orgSlug = generateSlug(orgName);
 
@@ -79,6 +81,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
             await client.send(new PutItemCommand(membershipParams));
             console.log(`Created Membership for Owner`);
         }
+        */
 
     } catch (error) {
         console.error("Error in post-confirmation:", error);
