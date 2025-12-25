@@ -210,8 +210,12 @@ export const useStore = create<AppState>((set, get) => ({
 
             // 1. Create Org
             console.log("Creating Organization...");
+            if (!client.models.Organization) {
+                throw new Error("Client model 'Organization' is undefined. Please restart the dev server to sync the schema.");
+            }
             const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
-                name: orgName
+                name: orgName,
+                slug: `org-${Date.now()}`
             });
 
             if (orgErrors || !newOrg) {

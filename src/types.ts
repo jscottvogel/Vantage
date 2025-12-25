@@ -10,6 +10,7 @@ export type SubscriptionTier = 'Free' | 'Pro' | 'Enterprise';
 export interface Organization {
     id: string;
     name: string;
+    slug: string;
     domain?: string;
     subscriptionTier: SubscriptionTier;
     ssoSettings?: {
