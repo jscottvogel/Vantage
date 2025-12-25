@@ -230,6 +230,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Objective Name</label>
                                     <input
+                                        id="objective-name"
+                                        name="objective-name"
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         placeholder="e.g. Expand into APAC Region"
                                         value={name}
@@ -240,6 +242,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Strategic Value</label>
                                     <select
+                                        id="strategic-value"
+                                        name="strategic-value"
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={strategicValue}
                                         onChange={e => setStrategicValue(e.target.value as any)}
@@ -253,6 +257,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Target Date</label>
                                 <input
+                                    id="objective-target-date"
+                                    name="objective-target-date"
                                     type="date"
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm max-w-sm"
                                     value={targetDate}
@@ -291,6 +297,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal (The 'What')</label>
                                                 <textarea
+                                                    id={`outcome-${oIndex}-goal`}
+                                                    name={`outcome-${oIndex}-goal`}
                                                     className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                                     placeholder="What are we trying to achieve?"
                                                     value={outcome.goal}
@@ -301,6 +309,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Benefit (The 'Why')</label>
                                                 <textarea
+                                                    id={`outcome-${oIndex}-benefit`}
+                                                    name={`outcome-${oIndex}-benefit`}
                                                     className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                                     placeholder="Business value?"
                                                     value={outcome.benefit}
@@ -313,6 +323,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             <div className="space-y-2 col-span-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</label>
                                                 <select
+                                                    id={`outcome-${oIndex}-owner`}
+                                                    name={`outcome-${oIndex}-owner`}
                                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm appearance-none"
                                                     value={outcome.ownerId}
                                                     onChange={e => handleUpdateOutcome(oIndex, 'ownerId', e.target.value)}
@@ -326,6 +338,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Start Date</label>
                                                 <input
+                                                    id={`outcome-${oIndex}-start-date`}
+                                                    name={`outcome-${oIndex}-start-date`}
                                                     type="date"
                                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                                     value={outcome.startDate}
@@ -335,6 +349,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Date</label>
                                                 <input
+                                                    id={`outcome-${oIndex}-target-date`}
+                                                    name={`outcome-${oIndex}-target-date`}
                                                     type="date"
                                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                                     value={outcome.targetDate}
@@ -393,6 +409,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                     <div className="grid grid-cols-12 gap-3 mb-2 items-start">
                                                         <div className="col-span-3 space-y-1">
                                                             <input
+                                                                id={`kr-${oIndex}-${kIndex}-description`}
+                                                                name={`kr-${oIndex}-${kIndex}-description`}
                                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-medium"
                                                                 placeholder="Key Result Description"
                                                                 value={kr.description}
@@ -402,6 +420,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                         </div>
                                                         <div className="col-span-2">
                                                             <select
+                                                                id={`kr-${oIndex}-${kIndex}-owner`}
+                                                                name={`kr-${oIndex}-${kIndex}-owner`}
                                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm appearance-none"
                                                                 value={kr.ownerId}
                                                                 onChange={e => handleUpdateKR(oIndex, kIndex, 'ownerId', e.target.value)}
@@ -414,6 +434,8 @@ export function CreateObjectiveDialog({ onClose }: CreateObjectiveDialogProps) {
                                                         </div>
                                                         <div className="col-span-2">
                                                             <input
+                                                                id={`kr-${oIndex}-${kIndex}-target-date`}
+                                                                name={`kr-${oIndex}-${kIndex}-target-date`}
                                                                 type="date"
                                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                                                 value={kr.targetDate}

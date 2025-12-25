@@ -42,6 +42,8 @@ export function UserManagement() {
                             <h4 className="font-semibold text-sm">Invite New User</h4>
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <input
+                                    id="invite-email"
+                                    name="invite-email"
                                     autoFocus
                                     className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     placeholder="email@company.com"
@@ -49,6 +51,8 @@ export function UserManagement() {
                                     onChange={e => setInviteEmail(e.target.value)}
                                 />
                                 <select
+                                    id="invite-role"
+                                    name="invite-role"
                                     className="flex h-10 w-full sm:w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     value={inviteRole}
                                     onChange={e => setInviteRole(e.target.value as 'Admin' | 'Member')}

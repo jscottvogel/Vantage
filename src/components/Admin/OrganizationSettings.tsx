@@ -44,6 +44,8 @@ export function OrganizationSettings() {
                         <label className="text-sm font-medium">Organization Name</label>
                         <div className="flex gap-2">
                             <input
+                                id="org-name"
+                                name="org-name"
                                 className="flex h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
@@ -101,11 +103,11 @@ export function OrganizationSettings() {
                     <div className="grid gap-4">
                         <div className="grid gap-2">
                             <label className="text-sm font-medium">Identity Provider</label>
-                            <input disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="e.g. Okta" />
+                            <input id="sso-provider" name="sso-provider" disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="e.g. Okta" />
                         </div>
                         <div className="grid gap-2">
                             <label className="text-sm font-medium">Metadata URL</label>
-                            <input disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="https://..." />
+                            <input id="sso-url" name="sso-url" disabled className="flex h-10 w-full max-w-sm rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="https://..." />
                         </div>
                     </div>
                 </CardContent>
