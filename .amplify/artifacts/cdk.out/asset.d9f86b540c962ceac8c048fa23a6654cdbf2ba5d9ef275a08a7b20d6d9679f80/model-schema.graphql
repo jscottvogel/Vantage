@@ -1,9 +1,0 @@
-type NotificationResponse @aws_cognito_user_pools
-{
-  success: Boolean!
-  message: String
-}
-
-type Mutation {
-  sendHeartbeatNotification(recipientEmail: String!, link: String!, subject: String!, messageBody: String!): NotificationResponse @function(name: "FnSendHeartbeatNotification") @auth(rules: [{allow: private}])
-}
