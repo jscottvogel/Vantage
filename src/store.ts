@@ -211,9 +211,8 @@ export const useStore = create<AppState>((set, get) => ({
             // 1. Create Org
             console.log("Creating Organization...");
             const { data: newOrg, errors: orgErrors } = await client.models.Organization.create({
-                name: orgName,
-                slug: `org-${Date.now()}`
-            });
+                name: orgName
+            } as any);
 
             if (orgErrors || !newOrg) {
                 console.error("Org Creation Failed", orgErrors);
