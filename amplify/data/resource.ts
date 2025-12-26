@@ -51,7 +51,6 @@ const schema = a.schema({
 
     Organization: a.model({
         name: a.string().required(),
-        slug: a.string().required(), // Restored for backend compatibility
         subscriptionTier: a.string().default('Free'),
         status: a.string().default('Active'),
         createdBySub: a.string(),
@@ -60,7 +59,6 @@ const schema = a.schema({
         invites: a.hasMany('Invite', 'orgId'),
         objectives: a.hasMany('StrategicObjective', 'orgId')
     })
-        .secondaryIndexes((index) => [index('slug')])
         .authorization(allow => [
             allow.authenticated() // MVP: Auth users can resolve orgs (validated by membership downstream)
         ]),
